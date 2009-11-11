@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+      <itemPath>../../../data/robot.mdl</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="code" displayName="code" projectFiles="true">
+        <logicalFolder name="netbeans" displayName="netbeans" projectFiles="true">
+          <logicalFolder name="ncrobot" displayName="ncrobot" projectFiles="true">
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="vstudio9" displayName="vstudio9" projectFiles="true">
+        </logicalFolder>
+        <itemPath>../../CfgParser.cpp</itemPath>
+        <itemPath>../../CfgParser.h</itemPath>
+        <itemPath>../../DebugTrace.cpp</itemPath>
+        <itemPath>../../DebugTrace.h</itemPath>
+        <itemPath>../../InputBuffer.cpp</itemPath>
+        <itemPath>../../InputBuffer.h</itemPath>
+        <itemPath>../../Matrix.cpp</itemPath>
+        <itemPath>../../Matrix.h</itemPath>
+        <itemPath>../../Matrix22.h</itemPath>
+        <itemPath>../../Model.cpp</itemPath>
+        <itemPath>../../Model.h</itemPath>
+        <itemPath>../../StdIncl.h</itemPath>
+        <itemPath>../../Vector.cpp</itemPath>
+        <itemPath>../../Vector.h</itemPath>
+        <itemPath>../../Vector2.h</itemPath>
+        <itemPath>../../main.cpp</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>../..</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>4</platform>
+      </toolsSet>
+      <compileType>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>4</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>

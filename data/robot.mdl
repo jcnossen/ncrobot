@@ -1,0 +1,72 @@
+
+// Robot model
+
+/*
+
+*/
+
+
+model =
+{
+	name = "2-leg walker"
+
+	parts=
+	{
+		base = {
+			pos = { 0, 10 } // reference position, it will calculate actual COG using shape info
+			weight = 12
+			shape = { type = "box", size = {2,2} } // it can figure out polar inertia based on this
+		}
+		
+		upperLeg1 = {
+			pos = { 0, 10 }
+			weight = 3
+			drag = 0
+			angularDrag = 0
+			shape = { type = "line", end = {0,-5} }
+		}
+		
+		upperLeg2 = {
+			pos = { 0, 10 }
+			weight = 3
+			shape = { type = "line", end = {0,-5} }
+		}
+		
+		lowerLeg1 = {
+			pos = { 0, 5 }
+			weight = 3
+			shape = { type = "line", end = {0,-5} }			
+		}
+		lowerLeg2 = {
+			pos = { 0, 5 }
+			weight = 3
+			shape = { type = "line", end = {0,-5} }
+		}
+	}
+
+	constraints =
+	{
+		// 2 rotational hip 'motors'
+		hip1 = {
+			pos = {0,0} // relative to reference pos of first part
+			parts = { "base", "upperLeg1" }
+			type = "rotate"
+			motor = 1
+		}
+		hip2 = {
+			parts = { "base", "upperLeg2" }
+			type = "rotate"
+			motor = 1
+		}
+		
+		knee1 = {
+			parts = { "lowerLeg1", "upperLeg1" }
+			type = "rotate"
+		}
+	
+		knee2 = {
+			parts = { "lowerLeg2", "upperLeg2" }
+			type = "rotate"
+		}
+	}
+}
