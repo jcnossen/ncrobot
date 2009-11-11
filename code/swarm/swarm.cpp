@@ -16,36 +16,7 @@
 #include <algorithm>
 using namespace std;
 
-
-class Particle
-{
-  public:
-  vector<double> position;
-  vector<double> velocity;
-  vector<int> friends;
-};
-
-
-class ParameterRange 
-{
-  public:
-  float min, max;
-};
-
-
-class Swarm
-{
-  public:
-  int populationSize, dimension;
-  vector<Particle> swarm;
-
-  void readInput();
-  void initialize(vector<ParameterRange> paramRanges);
-  void update();
-};
-
-
-
+#include "swarm.h"
 
 
 //This function takes information about how to set up a swarm from stdin
@@ -131,7 +102,7 @@ void Swarm::initialize(vector<ParameterRange> paramRanges)
   dimension=paramRanges.size();
   for(j=0;j<populationSize;j++)
   {
-    swarm[j].velocity=vector<double>(dimension,0.0);
+    swarm[j].velocity=vector<float>(dimension,0.0);
     for(i=0;i<dimension;i++)
       swarm[j].position.push_back(((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min);
   }
@@ -154,21 +125,6 @@ void Swarm::update()
 }
 
 
-
-
-
-int main()
-{
-  Swarm myswarm;
-  myswarm.readInput();
-
-
-
-
-
-   
-  return 0;
-}
 
 
 
