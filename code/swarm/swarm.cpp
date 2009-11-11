@@ -19,6 +19,19 @@ using namespace std;
 #include "swarm.h"
 
 
+double normaldistributionvariable(double mean, double stdev)
+{
+  double U1=((rand()%1000000)+1)/1000000.0;
+  double U2=((rand()%1000000)+1)/1000000.0;
+
+  double Z=sqrt(-2*log(U1))*cos(2*3.14159265358979*U2);
+
+  return Z*stdev+mean;
+}
+
+
+
+
 //This function takes information about how to set up a swarm from stdin
 void Swarm::readInput()
 {

@@ -30,5 +30,5 @@ class Swarm
 };
 
 
-
+double normaldistributionvariable(double mean, double stdev);
 
