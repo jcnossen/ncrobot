@@ -55,6 +55,8 @@ Steps:
 			ps.forceAccum += simCfg->gravity * model->parts[a]->mass.weight;
 
 			// Damping?
+
+			ps.forceAccum -= ps.speed * model->parts[a]->drag;
 		}
 
 

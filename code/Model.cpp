@@ -53,6 +53,7 @@ namespace ncrobot {
 		part->refPos = cfg->GetVector2("pos");
 		part->mass.weight = cfg->GetNumeric("weight");
 		part->mass.J = cfg->GetNumeric("J",-1.0f);
+		part->drag = cfg->GetNumeric("drag");
 
 		// Parse shape
 		CfgList *shapeCfg = cfg->GetList("shape");

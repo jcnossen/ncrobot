@@ -15,6 +15,7 @@ model =
 		base = {
 			pos = { 0, 10 } // reference position, it will calculate actual COG using shape info
 			weight = 12
+			drag = 30
 			shape = { type = "box", size = {2,2} } // it can figure out polar inertia based on this
 		}
 		

@@ -34,6 +34,7 @@ namespace ncrobot {
 		Vector2 center; // center of gravity, defined in model space
 		Vector2 refPos; // reference position for constraint definitions
 		Shape* shape;
+		float drag;
 	};
 
 	class Constraint
