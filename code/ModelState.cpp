@@ -57,6 +57,7 @@ Steps:
 			// Damping?
 
 			ps.forceAccum -= ps.speed * model->parts[a]->drag;
+			ps.momentAccum -= ps.angularVel * model->parts[a]->angularDrag;
 		}
 
 
@@ -78,7 +79,6 @@ Steps:
 			ps.forceAccum = Vector2();
 			ps.momentAccum = 0.0f;
 		}
-
 	}
 
 	void ModelState::draw() {

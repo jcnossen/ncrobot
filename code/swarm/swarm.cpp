@@ -14,9 +14,9 @@
 #include <list>
 #include <numeric>
 #include <algorithm>
-using namespace std;
 
 #include "swarm.h"
+using namespace std;
 
 
 double normaldistributionvariable(double mean, double stdev)
