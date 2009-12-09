@@ -54,11 +54,8 @@ void Swarm::readInput()
   //negative 'friendships' values: -1 -> star topology
   //                               -2 -> cycle topology
   //                               -3 -> Kn topology
-  //                               -4 -> square grid topology     //TODO  
-  //                               -5 -> triangle grid topology   //TODO 
-  //                               -6 -> hexagonal grid topolgy   //TODO 
-  //                               -7 -> cube grid topology       //TODO ??? of hypercube? evt zoveel dimensionaal als de positievector...
-  //                               -8 -> optimal ball packing topology //TODO ???
+  //                               -4 -> square grid topology       
+  //                               -5 -> random graph
   
   
   if(friendships==-1)
@@ -105,6 +102,20 @@ void Swarm::readInput()
         }
   }
 
+  if(friendships==-5)
+  {
+    double density;
+    scanf("%lf",&density);
+    for(i=0;i<populationSize;i++)
+      for(j=i+1;j<populationSize;j++)
+        if(rand()%1000<1000*density)
+        {
+          swarm[j].friends.push_back(i);
+          swarm[i].friends.push_back(j);        
+        }
+  }
+
+
   return;
 }
 
@@ -113,8 +124,10 @@ void Swarm::initialize()
 {
   int i,j;
   dimension=paramRanges.size();
+  globalOptimum=1e15; //aangenomen dat we minimaliseren!!!!
   for(j=0;j<populationSize;j++)
   {
+    swarm[j].localOptimum=1e15;
     swarm[j].velocity=vector<float>(dimension,0.0);
     for(i=0;i<dimension;i++)
       swarm[j].position.push_back(((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min);
@@ -122,9 +135,12 @@ void Swarm::initialize()
 }
 
 
+//This function assumes the new fitnessvalues have just been updated
 void Swarm::update()
 {
   int i,j,k;
+
+
 
   //update velocities
 

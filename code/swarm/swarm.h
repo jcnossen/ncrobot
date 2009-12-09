@@ -8,6 +8,8 @@ class Particle
   std::vector<float> position;
   std::vector<float> velocity;
   std::vector<int> friends;
+  
+  std::vector<float> localOptimal; float localOptimum;
 };
 
 
@@ -22,6 +24,7 @@ class Swarm
 {
   public:
   int populationSize, dimension;
+  std::vector<float> globalOptimal; float globalOptimum;
   std::vector<Particle> swarm;
 	std::vector<ParameterRange> paramRanges;
 
