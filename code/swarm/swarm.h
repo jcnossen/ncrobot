@@ -3,12 +3,12 @@
 class Particle
 {
 public:
-  float fitness;
-  std::vector<float> position;
-  std::vector<float> velocity;
+  Particle() { personalOptimum=fitness=0.0f;}
+  float fitness,personalOptimum,friendOptimum;
+  
+  std::vector<float> position,velocity,personalBest,friendBest;
   std::vector<int> friends;
   
-  std::vector<float> localOptimal; float localOptimum;
 };
 
 
@@ -19,18 +19,28 @@ public:
 };
 
 
+struct SwarmConfig
+{
+  SwarmConfig() { popSize=15; graphType=4; randomParam=0.1; phi1=2; phi2=2; }
+
+  int popSize;
+  int graphType;
+  float randomParam;
+  std::vector<ParameterRange> paramRanges;
+  float phi1,phi2;
+};
+
 class Swarm
 {
 public:
   int populationSize, dimension;
-  std::vector<float> globalOptimal; float globalOptimum;
+  std::vector<float> globalOptimal; float globalOptimum,phi1,phi2;
   std::vector<Particle> swarm;
 	std::vector<ParameterRange> paramRanges;
 
-	Swarm(int popSize, int graphType, float randomParam, std::vector<ParameterRange> paramRanges);
+	Swarm(SwarmConfig cfg);
 
-  void readInput();
-  void initialize();
+  void setupGraph(int graphType, float randomParam);
   void update();
 };
 

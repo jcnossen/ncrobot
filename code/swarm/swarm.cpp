@@ -19,79 +19,54 @@
 using namespace std;
 
 
-double normaldistribution(double mean, double stdev)
+float Normal(double mean, double stdev)
 {
-  double U1=((rand()%1000000)+1)/1000000.0;
-  double U2=((rand()%1000000)+1)/1000000.0;
+  float U1=((rand()%32000)+1)/32000.0;
+  float U2=((rand()%32000)+1)/32000.0;
 
-  double Z=sqrt(-2*log(U1))*cos(2*3.14159265358979*U2);
+  float Z=sqrt(-2*log(U1))*cos(2*3.14159265358979*U2);
 
   return Z*stdev+mean;
 }
 
-
-Swarm::Swarm(int popSize, int graphType, float randomParam, std::vector<ParameterRange> ranges)
+float Uniform(float low, float high)
 {
-	this->populationSize = popSize;
-	this->paramRanges = paramRanges;
-	this->dimension = paramRanges.size();
-
-	swarm.resize(popSize);
-	for(int i=0;i<swarm.size();i++) {
-		swarm[i].position.resize(ranges.size());
-		swarm[i].velocity.resize(ranges.size());
-	}
+  return ((rand()%32000)/32000.0)*(high-low)+low;
 }
 
 
 
-//This function takes information about how to set up a swarm from stdin
-void Swarm::readInput()
+//Create friendship network graph.
+//graphType values: 0 -> star topology
+//                  1 -> cycle topology
+//                  2 -> Kn topology
+//                  3 -> square grid topology       
+//                  4 -> random graph
+void Swarm::setupGraph(int graphType, float randomParam)
 {
-  int i,j,k;
-  scanf("%d",&populationSize);
-  
+  int i,j;
 
-  swarm=vector<Particle>(populationSize);
-  
-  int friendships;
-  scanf("%d",&friendships);
-
-  //A 'friendships' value >=0 indicates one can expect this number of unidirectional edges: from to
-  for(i=0;i<friendships;i++)
-  {
-    scanf("%d %d",&j,&k);
-    swarm[j].friends.push_back(k);
-  }
-
-  //negative 'friendships' values: -1 -> star topology
-  //                               -2 -> cycle topology
-  //                               -3 -> Kn topology
-  //                               -4 -> square grid topology       
-  //                               -5 -> random graph
-  
-  
-  if(friendships==-1)
+  if(graphType==0)
     for(i=1;i<populationSize;i++)
     {
       swarm[0].friends.push_back(i);
       swarm[i].friends.push_back(0);
     }
 
-  if(friendships==-2)
+  if(graphType==1)
     for(i=0;i<populationSize;i++)
     {
       swarm[i].friends.push_back((i+1)%populationSize);
       swarm[(i+1)%populationSize].friends.push_back(i);
     }   
 
-  if(friendships==-3)
+  if(graphType==2)
     for(i=0;i<populationSize;i++)
       for(j=0;j<populationSize;j++)
         if(j!=i)
           swarm[i].friends.push_back(j);
           
-  if(friendships==-4)
+  if(graphType==3)
   {
     int z = (int)sqrtf(populationSize);
     if(z*z!=populationSize) z++;
@@ -115,37 +90,50 @@ void Swarm::readInput()
         }
   }
 
-  if(friendships==-5)
+  if(graphType==4)
   {
-    double density;
-    scanf("%lf",&density);
     for(i=0;i<populationSize;i++)
       for(j=i+1;j<populationSize;j++)
-        if(rand()%1000<1000*density)
+        if(rand()%1000<1000*randomParam)
         {
           swarm[j].friends.push_back(i);
           swarm[i].friends.push_back(j);        
         }
   }
 
-
-  return;
 }
 
 
-void Swarm::initialize()
+
+Swarm::Swarm(SwarmConfig cfg)
 {
-  int i,j;
-  dimension=paramRanges.size();
-  globalOptimum=1e15; //aangenomen dat we minimaliseren!!!!
+	this->populationSize = cfg.popSize;
+	this->paramRanges = cfg.paramRanges;
+	this->dimension = cfg.paramRanges.size();
+//	this->phi1=cfg.phi1;
+//	this->phi2=cfg.phi2;
+
+	int i,j;
+  globalOptimum=0; 
+	swarm.resize(populationSize);
   for(j=0;j<populationSize;j++)
   {
-    swarm[j].localOptimum=1e15;
+    swarm[j].personalOptimum=0;
     swarm[j].velocity=vector<float>(dimension,0.0);
-    for(i=0;i<dimension;i++)
-      swarm[j].position.push_back(((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min);
+    swarm[j].personalBest=vector<float>(dimension,0.0);
+    swarm[j].friendBest=vector<float>(dimension,0.0);
+    
+    
+    for(i=0;i<dimension;i++) 
+      swarm[j].position[i]=((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min;
   }
+	setupGraph(cfg.graphType,cfg.randomParam); 
 }
+
+
+
+
+
 
 
 //This function assumes the new fitnessvalues have just been updated
@@ -153,17 +141,52 @@ void Swarm::update()
 {
   int i,j,k;
 
-
-
-  //update velocities
-
-
-
-
-  //update positions
+  //First update the personalBest and friendBest
   for(j=0;j<populationSize;j++)
+  {
+    //if there is an improvement...
+    if(swarm[j].fitness>swarm[j].personalOptimum)
+    {
+      //update the personal best
+      swarm[j].personalOptimum=swarm[j].fitness;
+      swarm[j].personalBest=swarm[j].position;
+      
+      //perhaps also update the friends best
+      if(swarm[j].fitness>swarm[j].friendOptimum)
+      {
+        swarm[j].friendOptimum=swarm[j].fitness;
+        swarm[j].friendBest=swarm[j].position;
+      }
+      
+      //Broadcast this result to friends
+      for(k=0;k<(int)swarm[j].friends.size();k++)
+      {      
+        int f=swarm[j].friends[k];
+        if(swarm[j].fitness>swarm[f].friendOptimum)
+        {
+          swarm[f].friendOptimum=swarm[j].fitness;
+          swarm[f].friendBest=swarm[j].position;
+        }
+      }
+    }
+  }
+
+
+
+  //Then adjust the position and velocity vectors
+  for(j=0;j<populationSize;j++)
+  {
+    //update velocity  
     for(i=0;i<dimension;i++)
-      swarm[j].position[i]+=swarm[j].velocity[i];
+    {
+      swarm[j].velocity[i]+=Uniform(0,phi1)*(swarm[j].personalBest[i]-swarm[j].position[i]);
+      swarm[j].velocity[i]+=Uniform(0,phi2)*(swarm[j].friendBest[i]-swarm[j].position[i]);    
+    }
+
+    //update position  
+    for(i=0;i<dimension;i++)
+      swarm[j].position[i]=max(paramRanges[i].min,min(paramRanges[i].max,swarm[j].position[i]+swarm[j].velocity[i]));
+  }
 }
 
 
