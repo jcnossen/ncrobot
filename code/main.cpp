@@ -23,6 +23,8 @@
 #include "Render.h"
 #include "Test.h"
 
+#include "swarm/Swarm.h"
+
 namespace
 {
 	int32 testIndex = 0;
@@ -264,11 +266,15 @@ void SingleStep(int)
 	settings.singleStep = 1;
 }
 
+void Reset(int)
+{
+	delete test;
+	test = g_testEntries[testIndex].createFcn();
+}
+
 void RunSwarm(int)
 {
 	settings.psoRun = true;
-
-	
 
 	settings.psoRun = false;
 }
@@ -345,7 +351,7 @@ int main(int argc, char** argv)
 	}
 
 	glui->add_button("Swarm optimization",0, RunSwarm);
-	glui->add_button("Pause", 0, Pause);
+	glui->add_button("Reset", 0, Reset);
 	glui->add_button("Single Step", 0, SingleStep);
 
 	glui->add_button("Quit", 0,(GLUI_Update_CB)exit);

@@ -33,11 +33,12 @@ public:
 		b2CircleDef cd;
 		cd.density=1.0f;
 		cd.radius=1.0f;
+		cd.filter.groupIndex=-1;
 		m.body->CreateShape(&cd);
 		m.body->SetMassFromShapes();
 
 		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, m.body, m.body->GetWorldCenter());
+		jd.Initialize(chassis, m.body, chassis->GetWorldCenter());
 		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 		motors.push_back(m);
 
@@ -45,6 +46,7 @@ public:
 		b2PolygonDef foot;
 		foot.SetAsBox(0.8f, 0.4f);
 		foot.density=1.0f;
+		foot.filter.groupIndex =-1;
 		Motor f;
 		b2BodyDef fd;
 		fd.position=b2Vec2(a1, 0.0f);
@@ -55,7 +57,7 @@ public:
 		f.joint=(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 	}
 
-	PSOWalker()
+	PSOWalker(int legs)
 	{
 		m_offset.Set(0.0f, 8.0f);
 
@@ -87,9 +89,11 @@ public:
 			chassis->SetMassFromShapes();
 		}
 
-		CreateLeg(0.5f, -0.5f);
-		CreateLeg(-0.5f, 0.5f);
+		for(int x=0;x<legs/2;x++) {
+			CreateLeg(2.0f, -0.5f);
+			CreateLeg(-2.0f, 0.5f);
 
+		}
 	}
 
 	void Step(TestSettings* settings)
@@ -103,8 +107,7 @@ public:
 	}
 
 	void Keyboard(unsigned char key)
-	{
-	}
+	{ }
 
 	std::vector<PSOInput> getPSOInputs()
 	{
@@ -115,8 +118,21 @@ public:
 };
 
 
-Test* CreatePSOWalker()
+Test* CreatePSOWalker2()
 {
-	return new PSOWalker();
+	return new PSOWalker(2);
 }
+
+Test* CreatePSOWalker4()
+{
+	return new PSOWalker(4);
+}
+
+
+TestEntry g_testEntries[] =
+{
+	{"2-leg walker", CreatePSOWalker2},
+	{"4-leg walker", CreatePSOWalker4},
+	{0, 0	}
+};
 

@@ -32,14 +32,6 @@
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
 #include "PSOWalker.h"
 
-
-TestEntry g_testEntries[] =
-{
-	{"Particle Swarm Learning Walker", CreatePSOWalker},
-	{0, 0	}
-};
-
-
 void DestructionListener::SayGoodbye(b2Joint* joint)
 {
 	if (test->m_mouseJoint == joint)

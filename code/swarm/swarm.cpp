@@ -30,6 +30,19 @@ double normaldistribution(double mean, double stdev)
 }
 
 
+Swarm::Swarm(int popSize, int graphType, float randomParam, std::vector<ParameterRange> ranges)
+{
+	this->populationSize = popSize;
+	this->paramRanges = paramRanges;
+	this->dimension = paramRanges.size();
+
+	swarm.resize(popSize);
+	for(int i=0;i<swarm.size();i++) {
+		swarm[i].position.resize(ranges.size());
+		swarm[i].velocity.resize(ranges.size());
+	}
+}
+
 
 
 //This function takes information about how to set up a swarm from stdin

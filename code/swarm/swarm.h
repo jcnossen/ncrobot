@@ -2,8 +2,7 @@
 
 class Particle
 {
-  public:
-
+public:
   float fitness;
   std::vector<float> position;
   std::vector<float> velocity;
@@ -15,18 +14,20 @@ class Particle
 
 class ParameterRange 
 {
-  public:
+public:
   float min, max;
 };
 
 
 class Swarm
 {
-  public:
+public:
   int populationSize, dimension;
   std::vector<float> globalOptimal; float globalOptimum;
   std::vector<Particle> swarm;
 	std::vector<ParameterRange> paramRanges;
+
+	Swarm(int popSize, int graphType, float randomParam, std::vector<ParameterRange> paramRanges);
 
   void readInput();
   void initialize();
