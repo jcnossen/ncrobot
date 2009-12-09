@@ -39,8 +39,8 @@ public:
 	{
 		for(int i=0;i<motors.size();i++) {
 			int f = motors[i].paramIndex;
-			float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
-
+			//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
+			float s = params[f+1] * cosf(params[f+1] * m_time - params[f+2]);
 			motors[i].joint->SetMotorSpeed(s);
 		}
 	}
@@ -67,6 +67,9 @@ public:
 		jd.Initialize(chassis, m.body, chassis->GetWorldCenter());
 		jd.enableMotor=true;
 		jd.maxMotorTorque=100.0f;
+		jd.enableLimit=true;
+		jd.lowerAngle = -3.14*0.25;
+		jd.upperAngle = 3.14*0.25;
 		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 		AddMotor(m);
 
@@ -84,6 +87,7 @@ public:
 		jd.Initialize(m.body, f.body, m.body->GetWorldCenter());
 		jd.enableMotor=true;
 		jd.maxMotorTorque=100.0f;
+		jd.enableLimit=false;
 		f.joint=(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 
 		AddMotor(f);
