@@ -110,23 +110,28 @@ Swarm::Swarm(SwarmConfig cfg)
 	this->populationSize = cfg.popSize;
 	this->paramRanges = cfg.paramRanges;
 	this->dimension = cfg.paramRanges.size();
-//	this->phi1=cfg.phi1;
-//	this->phi2=cfg.phi2;
+	this->phi1=cfg.phi1;
+	this->phi2=cfg.phi2;
 
+//printf("dim=%d\n",dimension);
 	int i,j;
   globalOptimum=0; 
 	swarm.resize(populationSize);
+//printf("swarmsize=%d\n",(int)swarm.size());
   for(j=0;j<populationSize;j++)
   {
     swarm[j].personalOptimum=0;
+    swarm[j].friendOptimum=0;
+    swarm[j].position=vector<float>(dimension,0.0);
     swarm[j].velocity=vector<float>(dimension,0.0);
     swarm[j].personalBest=vector<float>(dimension,0.0);
     swarm[j].friendBest=vector<float>(dimension,0.0);
     
-    
     for(i=0;i<dimension;i++) 
       swarm[j].position[i]=((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min;
   }
+
+//printf("hier\n");
 	setupGraph(cfg.graphType,cfg.randomParam); 
 }
 
