@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="glui/Debug"
+			OutputDirectory="..\..\Library"
 			IntermediateDirectory="glui/Debug"
 			ConfigurationType="4"
 			CharacterSet="0"
@@ -64,6 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -83,7 +84,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="glui/Release"
+			OutputDirectory="..\..\Library"
 			IntermediateDirectory="glui/Release"
 			ConfigurationType="4"
 			CharacterSet="0"

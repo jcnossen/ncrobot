@@ -68,15 +68,7 @@
 #                define FGAPI __declspec(dllexport)
 #        else
 #                define FGAPI __declspec(dllimport)
-
-            /* link with Win32 shared freeglut lib */
-#           if defined(_MSC_VER)
-#               ifndef _WIN32_WCE
-#                   pragma comment (lib, "freeglut.lib")
-#               endif
-#			endif
-
-#       endif
+#					endif
 
 #       define FGAPIENTRY __stdcall
 

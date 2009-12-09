@@ -1,207 +1,357 @@
-#include "StdIncl.h"
-#include "Model.h"
-#include "ModelState.h" 
-#include "CfgParser.h"
+/*
+* Copyright (c) 2006-2007 Erin Catto http://www.gphysics.com
+*
+* This software is provided 'as-is', without any express or implied
+* warranty.  In no event will the authors be held liable for any damages
+* arising from the use of this software.
+* Permission is granted to anyone to use this software for any purpose,
+* including commercial applications, and to alter it and redistribute it
+* freely, subject to the following restrictions:
+* 1. The origin of this software must not be misrepresented; you must not
+* claim that you wrote the original software. If you use this software
+* in a product, an acknowledgment in the product documentation would be
+* appreciated but is not required.
+* 2. Altered source versions must be plainly marked as such, and must not be
+* misrepresented as being the original software.
+* 3. This notice may not be removed or altered from any source distribution.
+*/
 
-#include <SDL.h>
-#include <SDL_main.h>
+#include <stdio.h>
 
-#include "OpenGL.h"
-#include "GUI.h"
+#include "glui/GL/glui.h"
 
-using namespace ncrobot;
+#include "Render.h"
+#include "Test.h"
 
-#ifdef WIN32
-	#include <windows.h>
-#endif
-
-void SysMsg (std::string txt, bool error=true) 
+namespace
 {
-#ifdef WIN32
-	MessageBoxA(NULL, txt.c_str(), "Exception: ", error ? (MB_OK | MB_ICONERROR) : MB_OK);
-	d_trace("Exception: %s\n", txt.c_str());
-#else
-	fprintf (error ? stderr : stdout, txt.c_str());
-#endif
+	int32 testIndex = 0;
+	int32 testSelection = 0;
+	TestEntry* entry;
+	Test* test;
+	Settings settings;
+	int32 width = 640;
+	int32 height = 480;
+	int32 framePeriod = 16;
+	int32 mainWindow;
+	float settingsHz = 60.0;
+	GLUI *glui;
+	float32 viewZoom = 1.0f;
+	b2Vec2 viewCenter(0.0f, 20.0f);
+	int tx, ty, tw, th;
+	bool rMouseDown;
+	b2Vec2 lastp;
+
 }
 
-static CfgList* appConfig = 0;
-static bool quitApp = false;
-static int screenWidth, screenHeight;
-static Vector2 mousePos;
-static Font* font;
-static Model* model;
-static ModelState* modelState;
-static SimulationConfig* simConfig;
-
-static Uint32 lastTicks;
-static Uint32 ticksRemainder=0;
-
-
-static void HandleKeyDown (SDLKey key) {
-	if (key == SDLK_ESCAPE)
-		quitApp=true;
-
-	if (key == SDLK_l)
-		modelState->loadInitial(XForm());
-}
-
-
-static void HandleEvents() 
+void Resize(int32 w, int32 h)
 {
-	SDL_Event event;
+	width = w;
+	height = h;
 
-	while (SDL_PollEvent(&event) == 1) {
-		if (event.type == SDL_KEYDOWN) {
-			HandleKeyDown (event.key.keysym.sym);
-		}
+	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
+	glViewport(tx, ty, tw, th);
 
-		if (event.type == SDL_QUIT)
-			quitApp=true;
-
-		if (event.type == SDL_MOUSEMOTION) {
-			mousePos = Vector2(event.motion.x, screenHeight - event.motion.y - 1);
-		}
-	}
-}
-
-static void VideoInit()
-{
-	CfgList* screenCfg = appConfig->GetList("screen");
-
-	if (!screenCfg)
-		screenCfg = CfgList::EmptyList;
-
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, screenCfg->GetInt("depthBufferBits", 24));
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	int flags = SDL_OPENGL;
-
-	screenWidth = screenCfg->GetInt("width", 700);
-	screenHeight = screenCfg->GetInt("height", 500);
-
-	if(!SDL_SetVideoMode(screenWidth, screenHeight, screenCfg->GetInt("bpp", 24), flags)) 
-	{
-		throw std::runtime_error("Failed to initialize display system");
-	}
-
-	SDL_ShowCursor(0);
-	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0.0, screenWidth, 0.0, screenHeight);
-	glMatrixMode(GL_MODELVIEW);
+	float32 ratio = float32(tw) / float32(th);
+
+	b2Vec2 extents(ratio * 25.0f, 25.0f);
+	extents *= viewZoom;
+
+	b2Vec2 lower = viewCenter - extents;
+	b2Vec2 upper = viewCenter + extents;
+
+	// L/R/B/T
+	gluOrtho2D(lower.x, upper.x, lower.y, upper.y);
 }
 
-static void DrawMouseCursor(Vector2 pos) {
-	glBegin(GL_TRIANGLES);
-	glColor(Color::Blue);
-	glVertex(pos);
-	glVertex2f(pos.x + 8, pos.y - 10);
-	glVertex2f(pos.x + 4, pos.y - 14);
-	glEnd();
+b2Vec2 ConvertScreenToWorld(int32 x, int32 y)
+{
+	float32 u = x / float32(tw);
+	float32 v = (th - y) / float32(th);
+
+	float32 ratio = float32(tw) / float32(th);
+	b2Vec2 extents(ratio * 25.0f, 25.0f);
+	extents *= viewZoom;
+
+	b2Vec2 lower = viewCenter - extents;
+	b2Vec2 upper = viewCenter + extents;
+
+	b2Vec2 p;
+	p.x = (1.0f - u) * lower.x + u * upper.x;
+	p.y = (1.0f - v) * lower.y + v * upper.y;
+	return p;
 }
 
-static void UpdateScreen()
+// This is used to control the frame rate (60Hz).
+void Timer(int)
+{
+	glutSetWindow(mainWindow);
+	glutPostRedisplay();
+	glutTimerFunc(framePeriod, Timer, 0);
+}
+
+void SimulationLoop()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	const int guiRectHeight=50;
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-		glLoadIdentity();
-		gluOrtho2D(-30,30,-10,30);
-		glMatrixMode(GL_MODELVIEW);
-
-		modelState->draw();
-
-		glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
+	test->SetTextLine(30);
+	settings.hz = settingsHz;
+	test->Step(&settings);
 
-	// ground
-	glColorRGB(0x7f7f7f);
-	glRecti(0, 0, screenWidth, guiRectHeight);
+	DrawString(5, 15, entry->name);
 
-	font->render("Testing...", Vector2(30,0), Color::White);
+	glutSwapBuffers();
 
-	DrawMouseCursor(mousePos);
-	SDL_GL_SwapBuffers();
-}
-
-static void UpdateTicks()
-{
-	Uint32 ticks = SDL_GetTicks();
-	Uint32 diff = ticks - lastTicks;
-
-	ticksRemainder += diff;
-	const int simTickLength = 1000 / simConfig->ticksPerSec;
-	while(ticksRemainder >= simTickLength) {
-
-		if (modelState) {
-			modelState->simulate(simConfig);
-		}
-
-		ticksRemainder -= simTickLength;
+	if (testSelection != testIndex)
+	{
+		testIndex = testSelection;
+		delete test;
+		entry = g_testEntries + testIndex;
+		test = entry->createFcn();
+		viewZoom = 1.0f;
+		viewCenter.Set(0.0f, 20.0f);
+		Resize(width, height);
 	}
-	lastTicks = ticks;
 }
 
-int main(int argc, char* argv[])
+void Keyboard(unsigned char key, int x, int y)
 {
-    try {
-		appConfig = CfgValue::LoadFile("../appconfig.txt");
+	B2_NOT_USED(x);
+	B2_NOT_USED(y);
 
-		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
-			SysMsg(SPrintf("SDL fails: %s", SDL_GetError()));
-			return -1;
+	switch (key)
+	{
+	case 27:
+		exit(0);
+		break;
+
+		// Press 'z' to zoom out.
+	case 'z':
+		viewZoom = b2Min(1.1f * viewZoom, 20.0f);
+		Resize(width, height);
+		break;
+
+		// Press 'x' to zoom in.
+	case 'x':
+		viewZoom = b2Max(0.9f * viewZoom, 0.02f);
+		Resize(width, height);
+		break;
+
+		// Press 'r' to reset.
+	case 'r':
+		delete test;
+		b2Assert(b2_byteCount == 0);
+		test = entry->createFcn();
+		break;
+
+		// Press space to launch a bomb.
+	case ' ':
+		if (test)
+		{
+			test->LaunchBomb();
 		}
+		break;
 
-		VideoInit ();
-
-		GUI_Init();
-		font = Font::load ("../data/Zillah Modern Thin.ttf", 16);
-
-		std::string modelFile = appConfig->GetLiteral("model", "data/robot.mdl");
-		Model mdl ("../" + modelFile);
-		model = &mdl;
-
-		simConfig = new SimulationConfig(appConfig->GetList("sim_config"));
-
-		modelState = new ModelState(model);
-		modelState->loadInitial(XForm());
-
-		d_trace("Model '%s' has %d parts and %d constraints\n", mdl.name.c_str(), mdl.parts.size(), mdl.constraints.size());
-
-		lastTicks = SDL_GetTicks();
-
-		while (!quitApp) {
-			HandleEvents();
-
-			if (SDL_GetAppState() & SDL_APPACTIVE) {
-				UpdateScreen();
-
-				UpdateTicks();
-			}
+	default:
+		if (test)
+		{
+			test->Keyboard(key);
 		}
+	}
+}
 
-		delete modelState;
-		delete font;
-		GUI_Shutdown();
+void KeyboardSpecial(int key, int x, int y)
+{
+	B2_NOT_USED(x);
+	B2_NOT_USED(y);
+
+	switch (key)
+	{
+		// Press left to pan left.
+	case GLUT_KEY_LEFT:
+		viewCenter.x -= 0.5f;
+		Resize(width, height);
+		break;
+
+		// Press right to pan right.
+	case GLUT_KEY_RIGHT:
+		viewCenter.x += 0.5f;
+		Resize(width, height);
+		break;
+
+		// Press down to pan down.
+	case GLUT_KEY_DOWN:
+		viewCenter.y -= 0.5f;
+		Resize(width, height);
+		break;
+
+		// Press up to pan up.
+	case GLUT_KEY_UP:
+		viewCenter.y += 0.5f;
+		Resize(width, height);
+		break;
+
+		// Press home to reset the view.
+	case GLUT_KEY_HOME:
+		viewZoom = 1.0f;
+		viewCenter.Set(0.0f, 20.0f);
+		Resize(width, height);
+		break;
+	}
+}
+
+void Mouse(int32 button, int32 state, int32 x, int32 y)
+{
+	// Use the mouse to move things around.
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_DOWN)
+		{
+			b2Vec2 p = ConvertScreenToWorld(x, y);
+			test->MouseDown(p);
+		}
 		
-	} catch (ContentException e) {
-		SDL_Quit();
-		SysMsg(SPrintf("Content Exception: %s\n", e.what()));
-	}
-#ifndef _DEBUG
-	catch (std::exception e) {
-		SDL_Quit();
-		SysMsg( SPrintf("Exception: %s", e.what()), true);
-	}
-#endif
-	delete appConfig;
+		if (state == GLUT_UP)
+		{
+			test->MouseUp();
+		}
+	} else if (button == GLUT_RIGHT_BUTTON)
+	{
+		if (state == GLUT_DOWN)
+		{	
+			lastp = ConvertScreenToWorld(x, y);
+			rMouseDown = true;
+		}
 
-    return 0;
+		if (state == GLUT_UP)
+		{
+			rMouseDown = false;
+		}
+	}
+}
+
+void MouseMotion(int32 x, int32 y)
+{
+	b2Vec2 p = ConvertScreenToWorld(x, y);
+	test->MouseMove(p);
+	
+	if (rMouseDown){
+		b2Vec2 diff = p - lastp;
+		viewCenter.x -= diff.x;
+		viewCenter.y -= diff.y;
+		Resize(width, height);
+		lastp = ConvertScreenToWorld(x, y);
+	}
+}
+
+void MouseWheel(int wheel, int direction, int x, int y)
+{	B2_NOT_USED(wheel);
+	B2_NOT_USED(x);
+	B2_NOT_USED(y);
+	if (direction > 0) {
+		viewZoom /= 1.1f;
+	} else {
+		viewZoom *= 1.1f;
+	}
+	Resize(width, height);
+}
+
+void Pause(int)
+{
+	settings.pause = !settings.pause;
+}
+
+void SingleStep(int)
+{
+	settings.pause = 1;
+	settings.singleStep = 1;
+}
+
+int main(int argc, char** argv)
+{
+	entry = g_testEntries + testIndex;
+	test = entry->createFcn();
+
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowSize(width, height);
+	char title[32];
+	sprintf(title, "Box2D Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
+	mainWindow = glutCreateWindow(title);
+	//glutSetOption (GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+
+	glutDisplayFunc(SimulationLoop);
+	GLUI_Master.set_glutReshapeFunc(Resize);  
+	GLUI_Master.set_glutKeyboardFunc(Keyboard);
+	GLUI_Master.set_glutSpecialFunc(KeyboardSpecial);
+	GLUI_Master.set_glutMouseFunc(Mouse);
+#ifdef FREEGLUT
+	glutMouseWheelFunc(MouseWheel);
+#endif
+	glutMotionFunc(MouseMotion);
+
+	glui = GLUI_Master.create_glui_subwindow( mainWindow, 
+		GLUI_SUBWINDOW_RIGHT );
+
+	glui->add_statictext("Tests");
+	GLUI_Listbox* testList =
+		glui->add_listbox("", &testSelection);
+
+	glui->add_separator();
+
+	GLUI_Spinner* iterationSpinner =
+		glui->add_spinner("Iterations", GLUI_SPINNER_INT, &settings.iterationCount);
+	iterationSpinner->set_int_limits(1, 100);
+
+	GLUI_Spinner* hertzSpinner =
+		glui->add_spinner("Hertz", GLUI_SPINNER_FLOAT, &settingsHz);
+
+	hertzSpinner->set_float_limits(5.0f, 200.0f);
+
+	glui->add_checkbox("Position Correction", &settings.enablePositionCorrection);
+	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
+	glui->add_checkbox("Time of Impact", &settings.enableTOI);
+
+	glui->add_separator();
+
+	GLUI_Panel* drawPanel =	glui->add_panel("Draw");
+	glui->add_checkbox_to_panel(drawPanel, "Shapes", &settings.drawShapes);
+	glui->add_checkbox_to_panel(drawPanel, "Joints", &settings.drawJoints);
+	glui->add_checkbox_to_panel(drawPanel, "Core Shapes", &settings.drawCoreShapes);
+	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
+	glui->add_checkbox_to_panel(drawPanel, "OBBs", &settings.drawOBBs);
+	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
+	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
+	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
+	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);
+	glui->add_checkbox_to_panel(drawPanel, "Friction Forces", &settings.drawFrictionForces);
+	glui->add_checkbox_to_panel(drawPanel, "Center of Masses", &settings.drawCOMs);
+	glui->add_checkbox_to_panel(drawPanel, "Statistics", &settings.drawStats);
+
+	int32 testCount = 0;
+	TestEntry* e = g_testEntries;
+	while (e->createFcn)
+	{
+		testList->add_item(testCount, e->name);
+		++testCount;
+		++e;
+	}
+
+	glui->add_button("Pause", 0, Pause);
+	glui->add_button("Single Step", 0, SingleStep);
+
+	glui->add_button("Quit", 0,(GLUI_Update_CB)exit);
+	glui->set_main_gfx_window( mainWindow );
+
+	// Use a timer to control the frame rate.
+	glutTimerFunc(framePeriod, Timer, 0);
+
+	glutMainLoop();
+
+	return 0;
 }

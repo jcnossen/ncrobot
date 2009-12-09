@@ -2,6 +2,17 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncrobot", "ncrobot.vcproj", "{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A9CB908-4224-44A6-91AD-5E78DCC85128} = {5A9CB908-4224-44A6-91AD-5E78DCC85128}
+		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A} = {7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}
+		{50804869-9BB8-4871-90AB-15741ACC329F} = {50804869-9BB8-4871-90AB-15741ACC329F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Box2D", "..\..\Box2D\Build\VC8\Box2D.vcproj", "{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freeglut", "..\..\Box2D\Build\VC8\freeglut.vcproj", "{50804869-9BB8-4871-90AB-15741ACC329F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glui", "..\..\Box2D\Build\VC8\glui.vcproj", "{5A9CB908-4224-44A6-91AD-5E78DCC85128}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +24,18 @@ Global
 		{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}.Debug|Win32.Build.0 = Debug|Win32
 		{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}.Release|Win32.ActiveCfg = Release|Win32
 		{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}.Release|Win32.Build.0 = Release|Win32
+		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Debug|Win32.Build.0 = Debug|Win32
+		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Release|Win32.ActiveCfg = Release|Win32
+		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Release|Win32.Build.0 = Release|Win32
+		{50804869-9BB8-4871-90AB-15741ACC329F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{50804869-9BB8-4871-90AB-15741ACC329F}.Debug|Win32.Build.0 = Debug|Win32
+		{50804869-9BB8-4871-90AB-15741ACC329F}.Release|Win32.ActiveCfg = Release|Win32
+		{50804869-9BB8-4871-90AB-15741ACC329F}.Release|Win32.Build.0 = Release|Win32
+		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Debug|Win32.Build.0 = Debug|Win32
+		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Release|Win32.ActiveCfg = Release|Win32
+		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

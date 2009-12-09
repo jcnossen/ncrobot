@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="ncrobot"
 	ProjectGUID="{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}"
 	RootNamespace="ncrobot"
@@ -41,11 +41,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\libs\SDL-1.2.14\include;..\..\libs\SDL_ttf-2.0.9\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;&quot;..\..\libs\SDL_ttf-2.0.9\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib opengl32.lib glu32.lib ..\..\libs\SDL_ttf-2.0.9\lib\SDL_ttf.lib"
+				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -116,9 +116,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\libs\SDL-1.2.14\include;..\..\libs\SDL_ttf-2.0.9\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;&quot;..\..\libs\SDL_ttf-2.0.9\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;FREEGLUT_EXPORTS;FREEGLUT_STATIC"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -187,10 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\GUI.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\InputBuffer.cpp"
 				>
 			</File>
@@ -203,15 +199,23 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Model.cpp"
+				RelativePath="..\PSOWalker.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\ModelState.cpp"
+				RelativePath="..\Render.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Shape.cpp"
+				RelativePath="..\Render.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Test.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Test.h"
 				>
 			</File>
 			<File
@@ -237,10 +241,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\GUI.h"
-				>
-			</File>
-			<File
 				RelativePath="..\InputBuffer.h"
 				>
 			</File>
@@ -253,19 +253,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Model.h"
-				>
-			</File>
-			<File
-				RelativePath="..\ModelState.h"
-				>
-			</File>
-			<File
 				RelativePath="..\OpenGL.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Shape.h"
+				RelativePath="..\PSOWalker.h"
 				>
 			</File>
 			<File

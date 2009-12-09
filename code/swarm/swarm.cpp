@@ -83,7 +83,7 @@ void Swarm::readInput()
           
   if(friendships==-4)
   {
-    int z=sqrt(populationSize);
+    int z = (int)sqrtf(populationSize);
     if(z*z!=populationSize) z++;
   
     //horizontal edges
