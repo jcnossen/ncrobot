@@ -29,7 +29,7 @@ namespace
 	int32 testSelection = 0;
 	TestEntry* entry;
 	Test* test;
-	Settings settings;
+	TestSettings settings;
 	int32 width = 640;
 	int32 height = 480;
 	int32 framePeriod = 16;
@@ -149,14 +149,6 @@ void Keyboard(unsigned char key, int x, int y)
 		test = entry->createFcn();
 		break;
 
-		// Press space to launch a bomb.
-	case ' ':
-		if (test)
-		{
-			test->LaunchBomb();
-		}
-		break;
-
 	default:
 		if (test)
 		{
@@ -272,6 +264,15 @@ void SingleStep(int)
 	settings.singleStep = 1;
 }
 
+void RunSwarm(int)
+{
+	settings.psoRun = true;
+
+	
+
+	settings.psoRun = false;
+}
+
 int main(int argc, char** argv)
 {
 	entry = g_testEntries + testIndex;
@@ -304,7 +305,7 @@ int main(int argc, char** argv)
 
 	glui->add_separator();
 
-	GLUI_Spinner* iterationSpinner =
+/*	GLUI_Spinner* iterationSpinner =
 		glui->add_spinner("Iterations", GLUI_SPINNER_INT, &settings.iterationCount);
 	iterationSpinner->set_int_limits(1, 100);
 
@@ -312,6 +313,7 @@ int main(int argc, char** argv)
 		glui->add_spinner("Hertz", GLUI_SPINNER_FLOAT, &settingsHz);
 
 	hertzSpinner->set_float_limits(5.0f, 200.0f);
+*/
 
 	glui->add_checkbox("Position Correction", &settings.enablePositionCorrection);
 	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
@@ -342,6 +344,7 @@ int main(int argc, char** argv)
 		++e;
 	}
 
+	glui->add_button("Swarm optimization",0, RunSwarm);
 	glui->add_button("Pause", 0, Pause);
 	glui->add_button("Single Step", 0, SingleStep);
 

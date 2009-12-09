@@ -23,13 +23,13 @@
 #include "Render.h"
 
 class Test;
-struct Settings;
+struct TestSettings;
 
 typedef Test* TestCreateFcn();
 
-struct Settings
+struct TestSettings
 {
-	Settings() :
+	TestSettings() :
 		hz(60.0f),
 		iterationCount(10),
 		drawStats(0),
@@ -48,7 +48,9 @@ struct Settings
 		enablePositionCorrection(1),
 		enableTOI(1),
 		pause(0),
-		singleStep(0)
+		singleStep(0),
+		psoRun(false)
+		
 		{}
 
 	float32 hz;
@@ -70,6 +72,9 @@ struct Settings
 	int32 enableTOI;
 	int32 pause;
 	int32 singleStep;
+	bool psoRun; // is PSO running, in this case do not draw anything
+
+	bool drawing() { return psoRun==false; }
 };
 
 struct TestEntry
@@ -129,6 +134,13 @@ struct ContactPoint
 	ContactState state;
 };
 
+struct PSOInput
+{
+	float min, max;
+	const char* name;
+};
+
+
 class Test
 {
 public:
@@ -137,12 +149,13 @@ public:
 	virtual ~Test();
 
 	void SetTextLine(int32 line) { m_textLine = line; }
-	virtual void Step(Settings* settings);
+	virtual void Step(TestSettings* settings);
 	virtual void Keyboard(unsigned char key) { B2_NOT_USED(key); }
 	void MouseDown(const b2Vec2& p);
 	void MouseUp();
 	void MouseMove(const b2Vec2& p);
-	void LaunchBomb();
+
+	virtual std::vector<PSOInput> getPSOInputs() = 0;
 
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
@@ -162,7 +175,6 @@ protected:
 	DebugDraw m_debugDraw;
 	int32 m_textLine;
 	b2World* m_world;
-	b2Body* m_bomb;
 	b2MouseJoint* m_mouseJoint;
 };
 

@@ -16,6 +16,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+#include "StdIncl.h"
 #include "Test.h"
 #include "Render.h"
 
@@ -53,10 +54,6 @@ void DestructionListener::SayGoodbye(b2Joint* joint)
 
 void BoundaryListener::Violation(b2Body* body)
 {
-	if (test->m_bomb != body)
-	{
-		test->BoundaryViolated(body);
-	}
 }
 
 void ContactListener::Add(const b2ContactPoint* point)
@@ -121,7 +118,6 @@ Test::Test()
 	gravity.Set(0.0f, -10.0f);
 	bool doSleep = true;
 	m_world = new b2World(m_worldAABB, gravity, doSleep);
-	m_bomb = NULL;
 	m_textLine = 30;
 	m_mouseJoint = NULL;
 	m_pointCount = 0;
@@ -209,53 +205,26 @@ void Test::MouseMove(const b2Vec2& p)
 	}
 }
 
-void Test::LaunchBomb()
-{
-	if (m_bomb)
-	{
-		m_world->DestroyBody(m_bomb);
-		m_bomb = NULL;
-	}
-
-	b2BodyDef bd;
-	bd.allowSleep = true;
-	bd.position.Set(b2Random(-15.0f, 15.0f), 30.0f);
-	bd.isBullet = true;
-	m_bomb = m_world->CreateBody(&bd);
-	m_bomb->SetLinearVelocity(-5.0f * bd.position);
-
-	b2CircleDef sd;
-	sd.radius = 0.3f;
-	sd.density = 20.0f;
-	sd.restitution = 0.1f;
-	m_bomb->CreateShape(&sd);
-	
-	m_bomb->SetMassFromShapes();
-}
-
-void Test::Step(Settings* settings)
+void Test::Step(TestSettings* settings)
 {
 	float32 timeStep = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
 
 	if (settings->pause)
 	{
 		if (settings->singleStep)
-		{
 			settings->singleStep = 0;
-		}
 		else
-		{
 			timeStep = 0.0f;
-		}
 
-		DrawString(5, m_textLine, "****PAUSED****");
+		if (settings->drawing()) 
+			DrawString(5, m_textLine, "****PAUSED****");
 		m_textLine += 15;
 	}
 
 	uint32 flags = 0;
 	flags += settings->drawShapes			* b2DebugDraw::e_shapeBit;
 	flags += settings->drawJoints			* b2DebugDraw::e_jointBit;
-	flags += settings->drawCoreShapes		* b2DebugDraw::e_coreShapeBit;
+	flags += settings->drawCoreShapes	* b2DebugDraw::e_coreShapeBit;
 	flags += settings->drawAABBs			* b2DebugDraw::e_aabbBit;
 	flags += settings->drawOBBs				* b2DebugDraw::e_obbBit;
 	flags += settings->drawPairs			* b2DebugDraw::e_pairBit;
@@ -272,13 +241,7 @@ void Test::Step(Settings* settings)
 
 	m_world->Validate();
 
-	if (m_bomb != NULL && m_bomb->IsFrozen())
-	{
-		m_world->DestroyBody(m_bomb);
-		m_bomb = NULL;
-	}
-
-	if (settings->drawStats)
+	if (settings->drawStats && settings->drawing())
 	{
 		DrawString(5, m_textLine, "proxies(max) = %d(%d), pairs(max) = %d(%d)",
 			m_world->GetProxyCount(), b2_maxProxies,
@@ -293,7 +256,7 @@ void Test::Step(Settings* settings)
 		m_textLine += 15;
 	}
 
-	if (m_mouseJoint)
+	if (m_mouseJoint && settings->drawing())
 	{
 		b2Body* body = m_mouseJoint->GetBody2();
 		b2Vec2 p1 = body->GetWorldPoint(m_mouseJoint->m_localAnchor);
@@ -314,7 +277,7 @@ void Test::Step(Settings* settings)
 		glEnd();
 	}
 
-	if (settings->drawContactPoints)
+	if (settings->drawContactPoints && settings->drawing())
 	{
 		//const float32 k_impulseScale = 0.1f;
 		const float32 k_axisScale = 0.3f;

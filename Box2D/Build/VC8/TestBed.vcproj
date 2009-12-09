@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="TestBed"
 	ProjectGUID="{4820A670-09DE-43C1-813D-FFC0F9925445}"
 	RootNamespace="TestBed"
@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib ../../Library/Box2d_d.lib ../../Library/glui_d.lib ../../Library/freeglut_d.lib"
 				AdditionalLibraryDirectories="..\..\Library"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"

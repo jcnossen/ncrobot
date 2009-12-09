@@ -14,6 +14,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freeglut", "..\..\Box2D\Bui
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glui", "..\..\Box2D\Build\VC8\glui.vcproj", "{5A9CB908-4224-44A6-91AD-5E78DCC85128}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestBed", "..\..\Box2D\Build\VC8\TestBed.vcproj", "{4820A670-09DE-43C1-813D-FFC0F9925445}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -36,6 +38,10 @@ Global
 		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Debug|Win32.Build.0 = Debug|Win32
 		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Release|Win32.ActiveCfg = Release|Win32
 		{5A9CB908-4224-44A6-91AD-5E78DCC85128}.Release|Win32.Build.0 = Release|Win32
+		{4820A670-09DE-43C1-813D-FFC0F9925445}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4820A670-09DE-43C1-813D-FFC0F9925445}.Debug|Win32.Build.0 = Debug|Win32
+		{4820A670-09DE-43C1-813D-FFC0F9925445}.Release|Win32.ActiveCfg = Release|Win32
+		{4820A670-09DE-43C1-813D-FFC0F9925445}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

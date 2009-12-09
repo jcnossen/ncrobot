@@ -23,9 +23,10 @@ class Swarm
   public:
   int populationSize, dimension;
   std::vector<Particle> swarm;
+	std::vector<ParameterRange> paramRanges;
 
   void readInput();
-  void initialize(std::vector<ParameterRange> paramRanges);
+  void initialize();
   void update();
 };
 

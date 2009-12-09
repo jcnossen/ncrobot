@@ -19,7 +19,7 @@
 using namespace std;
 
 
-double normaldistributionvariable(double mean, double stdev)
+double normaldistribution(double mean, double stdev)
 {
   double U1=((rand()%1000000)+1)/1000000.0;
   double U2=((rand()%1000000)+1)/1000000.0;
@@ -109,7 +109,7 @@ void Swarm::readInput()
 }
 
 
-void Swarm::initialize(vector<ParameterRange> paramRanges)
+void Swarm::initialize()
 {
   int i,j;
   dimension=paramRanges.size();
