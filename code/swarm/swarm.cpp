@@ -18,6 +18,17 @@
 #include "swarm.h"
 using namespace std;
 
+const char* Swarm::graphTypeNames[] = {
+
+  "star topology",
+  "cycle topology",
+  "Kn topology",
+  "square grid topology",
+  "random graph"
+};
+
+int Swarm::numGraphTypes() { return sizeof(graphTypeNames) / sizeof(const char*); }
+
 
 float Normal(double mean, double stdev)
 {

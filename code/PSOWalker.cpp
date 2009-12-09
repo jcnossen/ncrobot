@@ -11,14 +11,40 @@ class PSOWalker : public Test
 public:
 	b2Vec2 m_offset;
 	b2Body* chassis;
+	std::vector<float> params;
 
 	struct Motor {
 		b2Body* body;
 		b2RevoluteJoint* joint;
+		int paramIndex;
 	};
 
-	std::vector<PSOInput> inputs;
+	std::vector<ParamInfo> inputs;
 	std::vector<Motor> motors;
+
+	void AddMotor(Motor m)
+	{
+		m.paramIndex = inputs.size();
+		motors.push_back(m);
+
+		ParamInfo inp;
+		inp.min = -100.0f;
+		inp.max = 100.0f;
+		inputs.push_back(inp);
+		inputs.push_back(inp);
+		inputs.push_back(inp);
+	}
+
+	void UpdateMotors()
+	{
+		for(int i=0;i<motors.size();i++) {
+			int f = motors[i].paramIndex;
+			float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
+
+			motors[i].joint->SetMotorSpeed(s);
+		}
+	}
+
 
 	void CreateLeg(float a0, float a1)
 	{
@@ -39,8 +65,10 @@ public:
 
 		b2RevoluteJointDef jd;
 		jd.Initialize(chassis, m.body, chassis->GetWorldCenter());
+		jd.enableMotor=true;
+		jd.maxMotorTorque=100.0f;
 		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
-		motors.push_back(m);
+		AddMotor(m);
 
 		// lower leg
 		b2PolygonDef foot;
@@ -54,7 +82,11 @@ public:
 		f.body->CreateShape(&foot);
 		f.body->SetMassFromShapes();
 		jd.Initialize(m.body, f.body, m.body->GetWorldCenter());
+		jd.enableMotor=true;
+		jd.maxMotorTorque=100.0f;
 		f.joint=(b2RevoluteJoint*)m_world->CreateJoint(&jd);
+
+		AddMotor(f);
 	}
 
 	PSOWalker(int legs)
@@ -90,14 +122,34 @@ public:
 		}
 
 		for(int x=0;x<legs/2;x++) {
-			CreateLeg(2.0f, -0.5f);
-			CreateLeg(-2.0f, 0.5f);
-
+			int v=x+1;
+			CreateLeg(v,2*v);
+			CreateLeg(-v,-2*v);
 		}
+	}
+
+	void SetupForPSO()
+	{
+		m_world->SetDebugDraw(0);
+		m_world->SetDestructionListener(0);
+		m_world->SetBoundaryListener(0);
+		m_world->SetContactFilter(0);
 	}
 
 	void Step(TestSettings* settings)
 	{
+		// Update motors based on time
+		if (settings->psoRun)
+			UpdateMotors();
+		else {
+			if (settings->motorCtl && params.size()>0)
+				UpdateMotors();
+			else {
+				for(int i=0;i<motors.size();i++)
+					motors[i].joint->EnableMotor(false);
+			}
+		}
+
 		if (!settings->psoRun) {
 			DrawString(5, m_textLine, "Keys: left = a, brake = s, right = d, toggle motor = m");
 			m_textLine += 15;
@@ -109,11 +161,22 @@ public:
 	void Keyboard(unsigned char key)
 	{ }
 
-	std::vector<PSOInput> getPSOInputs()
+	std::vector<ParamInfo> GetParamInfo()
 	{
 		return inputs;
 	}
+	
+	void SetControlParams(float* v)
+	{
+		if(params.empty())
+			params.resize(inputs.size());
+		params.assign(v,v+params.size());
+	}
 
+	float GetScore()
+	{
+		return chassis->GetWorldCenter().Length();
+	}
 
 };
 

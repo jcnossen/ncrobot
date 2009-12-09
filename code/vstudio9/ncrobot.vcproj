@@ -179,7 +179,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\CfgParser.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Color.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Color.h"
 				>
 			</File>
 			<File
@@ -187,7 +195,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DebugTrace.h"
+				>
+			</File>
+			<File
 				RelativePath="..\InputBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\InputBuffer.h"
 				>
 			</File>
 			<File
@@ -196,52 +212,6 @@
 			</File>
 			<File
 				RelativePath="..\Matrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\PSOWalker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Render.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Render.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Test.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Test.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Vector.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath="..\CfgParser.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Color.h"
-				>
-			</File>
-			<File
-				RelativePath="..\DebugTrace.h"
-				>
-			</File>
-			<File
-				RelativePath="..\InputBuffer.h"
 				>
 			</File>
 			<File
@@ -257,11 +227,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\PSOWalker.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\PSOWalker.h"
 				>
 			</File>
 			<File
+				RelativePath="..\Render.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Render.h"
+				>
+			</File>
+			<File
 				RelativePath="..\StdIncl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Test.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Test.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Vector.cpp"
 				>
 			</File>
 			<File
@@ -276,6 +270,12 @@
 				RelativePath="..\XForm.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
 		</Filter>
 		<Filter
 			Name="Resource Files"

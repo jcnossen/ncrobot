@@ -49,8 +49,8 @@ struct TestSettings
 		enableTOI(1),
 		pause(0),
 		singleStep(0),
-		psoRun(false)
-		
+		psoRun(false),
+		motorCtl(1)
 		{}
 
 	float32 hz;
@@ -73,6 +73,7 @@ struct TestSettings
 	int32 pause;
 	int32 singleStep;
 	bool psoRun; // is PSO running, in this case do not draw anything
+	int32 motorCtl;
 
 	bool drawing() { return psoRun==false; }
 };
@@ -134,7 +135,7 @@ struct ContactPoint
 	ContactState state;
 };
 
-struct PSOInput
+struct ParamInfo
 {
 	float min, max;
 	const char* name;
@@ -154,8 +155,15 @@ public:
 	void MouseDown(const b2Vec2& p);
 	void MouseUp();
 	void MouseMove(const b2Vec2& p);
+	void SetupListeners();
 
-	virtual std::vector<PSOInput> getPSOInputs() = 0;
+	virtual std::vector<ParamInfo> GetParamInfo() = 0;
+	virtual void SetControlParams(float* vals) = 0;
+
+	virtual float GetScore() = 0;
+	virtual void SetupForPSO() = 0;
+
+	float GetTime() { return m_time; }
 
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
@@ -176,6 +184,7 @@ protected:
 	int32 m_textLine;
 	b2World* m_world;
 	b2MouseJoint* m_mouseJoint;
+	float m_time;
 };
 
 #endif

@@ -16,7 +16,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <stdio.h>
+#include "StdIncl.h"
 
 #include "glui/GL/glui.h"
 
@@ -30,7 +30,7 @@ namespace
 	int32 testIndex = 0;
 	int32 testSelection = 0;
 	TestEntry* entry;
-	Test* test;
+	Test* test = 0;
 	TestSettings settings;
 	int32 width = 640;
 	int32 height = 480;
@@ -43,7 +43,9 @@ namespace
 	int tx, ty, tw, th;
 	bool rMouseDown;
 	b2Vec2 lastp;
+	int swarmTicks=100;
 
+	SwarmConfig swarmConfig;
 }
 
 void Resize(int32 w, int32 h)
@@ -94,6 +96,18 @@ void Timer(int)
 	glutTimerFunc(framePeriod, Timer, 0);
 }
 
+void SetupTest(std::vector<float>* ctlParams=0)
+{
+	delete test;
+	entry = g_testEntries + testIndex;
+	test = entry->createFcn();
+	test->SetupListeners();
+
+	if (ctlParams) {
+		test->SetControlParams(&(*ctlParams)[0]);
+	}
+}
+
 void SimulationLoop()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -112,9 +126,7 @@ void SimulationLoop()
 	if (testSelection != testIndex)
 	{
 		testIndex = testSelection;
-		delete test;
-		entry = g_testEntries + testIndex;
-		test = entry->createFcn();
+		SetupTest();
 		viewZoom = 1.0f;
 		viewCenter.Set(0.0f, 20.0f);
 		Resize(width, height);
@@ -274,15 +286,70 @@ void Reset(int)
 
 void RunSwarm(int)
 {
+	float simLength = 5.0f; // 5 second sim
 	settings.psoRun = true;
+
+	std::vector<ParamInfo> inputs = test->GetParamInfo();
+
+	std::vector<ParameterRange> ranges;
+	ranges.resize(inputs.size());
+	for(int i=0;i<ranges.size();i++) {
+		ranges[i].min=inputs[i].min;
+		ranges[i].max=inputs[i].max;
+	}
+
+	swarmConfig.paramRanges = ranges;
+	Swarm sw(swarmConfig);
+
+	float bestScore=0.0f;
+	std::vector<float> best;
+
+	TestEntry& entry = g_testEntries[testIndex];
+
+	for (int i=0;i<swarmTicks;i++) {
+		d_trace("Swarm update tick: %d", i);
+
+		sw.update();
+
+		int simticks = settings.hz * simLength;
+
+		for(int j=0;j<swarmConfig.popSize;j++) {
+			Particle& sp = sw.swarm[j];
+
+			Test* t = entry.createFcn();
+			t->SetControlParams(&sp.position[0]);
+
+			// run simulation, and feed scores back into swarm
+			t->SetupForPSO();
+			for(int u=0;u<simticks;u++) {
+	//			d_trace("  %2.2f\n", t->GetTime());
+				t->Step(&settings);
+			}
+
+			sp.fitness = t->GetScore();
+			if (sp.fitness > bestScore){ 
+				bestScore=sp.fitness;
+				best=sp.position;
+			}
+			delete t;
+
+			d_trace(".");
+		}
+		d_trace("BestLen: %f\n", bestScore);
+	}
+
+	SetupTest(&best);
+
+	for(int a=0;a<best.size();a++) {
+		d_trace("Param[%d]: %f\n", a,best[a]);
+	}
 
 	settings.psoRun = false;
 }
 
 int main(int argc, char** argv)
 {
-	entry = g_testEntries + testIndex;
-	test = entry->createFcn();
+	SetupTest();
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -311,6 +378,12 @@ int main(int argc, char** argv)
 
 	glui->add_separator();
 
+	glui->add_statictext("Swarm graph type");
+	GLUI_Listbox* graphTypeList = glui->add_listbox("", &swarmConfig.graphType);
+	for(int i=0;i<Swarm::numGraphTypes();i++)
+		graphTypeList->add_item(i, Swarm::graphTypeNames[i]);
+	glui->add_separator();
+
 /*	GLUI_Spinner* iterationSpinner =
 		glui->add_spinner("Iterations", GLUI_SPINNER_INT, &settings.iterationCount);
 	iterationSpinner->set_int_limits(1, 100);
@@ -325,15 +398,19 @@ int main(int argc, char** argv)
 	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
 	glui->add_checkbox("Time of Impact", &settings.enableTOI);
 
+	glui->add_spinner("Swarm ticks", GLUI_SPINNER_INT, &swarmTicks);
+	glui->add_spinner("Swarm size", GLUI_SPINNER_INT, &swarmConfig.popSize);
+	glui->add_checkbox("Motor control", &settings.motorCtl);
+
 	glui->add_separator();
 
 	GLUI_Panel* drawPanel =	glui->add_panel("Draw");
 	glui->add_checkbox_to_panel(drawPanel, "Shapes", &settings.drawShapes);
 	glui->add_checkbox_to_panel(drawPanel, "Joints", &settings.drawJoints);
-	glui->add_checkbox_to_panel(drawPanel, "Core Shapes", &settings.drawCoreShapes);
-	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
-	glui->add_checkbox_to_panel(drawPanel, "OBBs", &settings.drawOBBs);
-	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
+//	glui->add_checkbox_to_panel(drawPanel, "Core Shapes", &settings.drawCoreShapes);
+//	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
+//	glui->add_checkbox_to_panel(drawPanel, "OBBs", &settings.drawOBBs);
+//	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
 	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
 	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
 	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);

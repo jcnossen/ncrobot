@@ -113,7 +113,11 @@ Test::Test()
 	m_textLine = 30;
 	m_mouseJoint = NULL;
 	m_pointCount = 0;
+	m_time=0.0f;
+}
 
+void Test::SetupListeners()
+{
 	m_destructionListener.test = this;
 	m_boundaryListener.test = this;
 	m_contactListener.test = this;
@@ -316,4 +320,6 @@ void Test::Step(TestSettings* settings)
 			}
 		}
 	}
+	m_time += timeStep;
+
 }

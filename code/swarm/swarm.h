@@ -21,7 +21,7 @@ public:
 
 struct SwarmConfig
 {
-  SwarmConfig() { popSize=15; graphType=4; randomParam=0.1; phi1=2; phi2=2; }
+  SwarmConfig() { popSize=10; graphType=4; randomParam=0.1; phi1=2; phi2=2; }
 
   int popSize;
   int graphType;
@@ -42,6 +42,10 @@ public:
 
   void setupGraph(int graphType, float randomParam);
   void update();
+
+	static int numGraphTypes();
+	static const char* graphTypeNames[];
+
 };
 
 
