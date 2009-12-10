@@ -24,11 +24,18 @@
 #include "Test.h"
 
 #include "swarm/Swarm.h"
+#include "GAOptimizer.h"
+
+#include "ThreadManager.h"
+
+
+
 
 namespace
 {
 	int32 testIndex = 0;
 	int32 testSelection = 0;
+	int32 selectedOptimizer = 0;
 	TestEntry* entry;
 	Test* test = 0;
 	TestSettings settings;
@@ -43,10 +50,33 @@ namespace
 	int tx, ty, tw, th;
 	bool rMouseDown;
 	b2Vec2 lastp;
-	int swarmTicks=100;
+	int swarmTicks=20;
+	int numSimThreads=4;
+	float simLength = 5.0f; // 5 second sim
+	bool playback=false;
+	std::vector<float> curCtlParams;
 
 	SwarmConfig swarmConfig;
 }
+
+typedef Optimizer* OptimizerCreateFn();
+
+struct OptimizerEntry {
+	OptimizerCreateFn *createFn;
+	const char*name;
+};
+
+Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
+Optimizer* CreateGA() { return new GAOptimizer(); }
+//Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
+
+OptimizerEntry optimizers[] = {
+	{ CreateSwarm, "Particle Swarm" },
+	{ CreateGA, "Genetic Algorithm"	},
+//	{ CreateSA, "Simulated Annealing" },
+	{ 0, 0}
+};
+
 
 void Resize(int32 w, int32 h)
 {
@@ -104,7 +134,9 @@ void SetupTest(std::vector<float>* ctlParams=0)
 	test->SetupListeners();
 
 	if (ctlParams) {
-		test->SetControlParams(&(*ctlParams)[0]);
+		curCtlParams = *ctlParams;
+		test->SetControlParams(&curCtlParams[0]);
+		playback=true;
 	}
 }
 
@@ -117,6 +149,10 @@ void SimulationLoop()
 
 	test->SetTextLine(30);
 	settings.hz = settingsHz;
+
+	if (playback && test->GetTime() >= simLength) 
+		SetupTest(&curCtlParams);
+
 	test->Step(&settings);
 
 	DrawString(5, 15, entry->name);
@@ -280,62 +316,95 @@ void SingleStep(int)
 
 void Reset(int)
 {
-	delete test;
-	test = g_testEntries[testIndex].createFcn();
+	SetupTest();
+}
+
+struct TestWorkItemParam
+{
+	Test* test;
+	float score;
+	int numTicks;
+	int index;
+};
+
+void RunTest_WorkItem(void* d) {
+	TestWorkItemParam* p = (TestWorkItemParam*)d;
+//	printf("j=%d; %p\n",p->index,p);
+	
+	// run simulation, and feed scores back into swarm
+	p->test->SetupForPSO();
+	for(int u=0;u<p->numTicks;u++)
+		p->test->Step(&settings);
+	
+	p->score = p->test->GetScore();
 }
 
 void RunSwarm(int)
 {
-	float simLength = 5.0f; // 5 second sim
+	float bestScore=-100000.0f;
+	std::vector<float> best;
+	std::vector<ParamInfo> inputs = test->GetParamInfo();
+	std::vector<ParameterRange> ranges;
+
+	int simticks = settings.hz * simLength;
+
 	settings.psoRun = true;
 
-	std::vector<ParamInfo> inputs = test->GetParamInfo();
-
-	std::vector<ParameterRange> ranges;
 	ranges.resize(inputs.size());
 	for(int i=0;i<ranges.size();i++) {
 		ranges[i].min=inputs[i].min;
 		ranges[i].max=inputs[i].max;
 	}
 
+	Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
+
 	swarmConfig.paramRanges = ranges;
 	Swarm sw(swarmConfig);
 
-	float bestScore=0.0f;
-	std::vector<float> best;
+	bool useThreads=true;
 
 	TestEntry& entry = g_testEntries[testIndex];
 
 	for (int i=0;i<swarmTicks;i++) {
-		d_trace("Swarm update tick: %d", i);
+		d_trace("Swarm update tick: %d\n", i);
 
 		sw.update();
+		ThreadManager threadManager;
+		std::vector<TestWorkItemParam> workItemParams(swarmConfig.popSize);
 
-		int simticks = settings.hz * simLength;
-
+		// post items for the simulation threads
 		for(int j=0;j<swarmConfig.popSize;j++) {
 			Particle& sp = sw.swarm[j];
-
 			Test* t = entry.createFcn();
 			t->SetControlParams(&sp.position[0]);
+			workItemParams[j].test = t;
+			workItemParams[j].numTicks = simticks;
+			workItemParams[j].index=j;
 
-			// run simulation, and feed scores back into swarm
-			t->SetupForPSO();
-			for(int u=0;u<simticks;u++) {
-	//			d_trace("  %2.2f\n", t->GetTime());
-				t->Step(&settings);
-			}
+			if (useThreads) {
+				threadManager.AddWorkItem(RunTest_WorkItem, &workItemParams[j]);
+			} else
+				RunTest_WorkItem(&workItemParams[j]);
+		}
 
-			sp.fitness = t->GetScore();
+		if (useThreads) {
+			threadManager.Start(numSimThreads);
+			threadManager.WaitForAllDone();
+		}
+
+		// Update best score
+		for(int j=0;j<swarmConfig.popSize;j++) {
+			Particle& sp = sw.swarm[j];
+			delete workItemParams[j].test;
+			workItemParams[j].test=0;
+			sp.fitness = workItemParams[j].score;
 			if (sp.fitness > bestScore){ 
 				bestScore=sp.fitness;
 				best=sp.position;
 			}
-			delete t;
-
-			d_trace(".");
 		}
-		d_trace("BestLen: %f\n", bestScore);
+
+		d_trace("; BestLen: %f\n", bestScore);
 	}
 
 	SetupTest(&best);
@@ -346,6 +415,8 @@ void RunSwarm(int)
 
 	settings.psoRun = false;
 }
+
+
 
 int main(int argc, char** argv)
 {
@@ -373,8 +444,15 @@ int main(int argc, char** argv)
 		GLUI_SUBWINDOW_RIGHT );
 
 	glui->add_statictext("Tests");
-	GLUI_Listbox* testList =
-		glui->add_listbox("", &testSelection);
+	GLUI_Listbox* testList = glui->add_listbox("", &testSelection);
+
+	for(int i=0;g_testEntries[i].createFcn;i++)
+		testList->add_item(i, g_testEntries[i].name);
+
+	glui->add_statictext("Optimizer");
+	GLUI_Listbox* optimList = glui->add_listbox("", &selectedOptimizer);
+	for(int i=0;optimizers[i].createFn;i++)
+		optimList->add_item(i, optimizers[i].name);
 
 	glui->add_separator();
 
@@ -383,6 +461,7 @@ int main(int argc, char** argv)
 	for(int i=0;i<Swarm::numGraphTypes();i++)
 		graphTypeList->add_item(i, Swarm::graphTypeNames[i]);
 	glui->add_separator();
+
 
 /*	GLUI_Spinner* iterationSpinner =
 		glui->add_spinner("Iterations", GLUI_SPINNER_INT, &settings.iterationCount);
@@ -394,13 +473,15 @@ int main(int argc, char** argv)
 	hertzSpinner->set_float_limits(5.0f, 200.0f);
 */
 
-	glui->add_checkbox("Position Correction", &settings.enablePositionCorrection);
-	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
-	glui->add_checkbox("Time of Impact", &settings.enableTOI);
+// 	glui->add_checkbox("Position Correction", &settings.enablePositionCorrection);
+// 	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
+// 	glui->add_checkbox("Time of Impact", &settings.enableTOI);
 
 	glui->add_spinner("Swarm ticks", GLUI_SPINNER_INT, &swarmTicks);
 	glui->add_spinner("Swarm size", GLUI_SPINNER_INT, &swarmConfig.popSize);
 	glui->add_checkbox("Motor control", &settings.motorCtl);
+	glui->add_spinner("Simulation Threads", GLUI_SPINNER_INT, &numSimThreads);
+	glui->add_spinner("Sim length for optimizer", GLUI_SPINNER_FLOAT, &simLength);
 
 	glui->add_separator();
 
@@ -411,21 +492,15 @@ int main(int argc, char** argv)
 //	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
 //	glui->add_checkbox_to_panel(drawPanel, "OBBs", &settings.drawOBBs);
 //	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
-	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
-	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
-	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);
-	glui->add_checkbox_to_panel(drawPanel, "Friction Forces", &settings.drawFrictionForces);
-	glui->add_checkbox_to_panel(drawPanel, "Center of Masses", &settings.drawCOMs);
-	glui->add_checkbox_to_panel(drawPanel, "Statistics", &settings.drawStats);
+// 	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
+// 	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
+// 	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);
+// 	glui->add_checkbox_to_panel(drawPanel, "Friction Forces", &settings.drawFrictionForces);
+// 	glui->add_checkbox_to_panel(drawPanel, "Center of Masses", &settings.drawCOMs);
+// 	glui->add_checkbox_to_panel(drawPanel, "Statistics", &settings.drawStats);
 
-	int32 testCount = 0;
-	TestEntry* e = g_testEntries;
-	while (e->createFcn)
-	{
-		testList->add_item(testCount, e->name);
-		++testCount;
-		++e;
-	}
+	//glui->add_button("Deactivate panel", 0, DeactivatePanel);
+
 
 	glui->add_button("Swarm optimization",0, RunSwarm);
 	glui->add_button("Reset", 0, Reset);

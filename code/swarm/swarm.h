@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Optimizer.h"
+
 class Particle
 {
 public:
@@ -21,7 +23,7 @@ public:
 
 struct SwarmConfig
 {
-  SwarmConfig() { popSize=10; graphType=4; randomParam=0.1; phi1=2; phi2=2; }
+  SwarmConfig() { popSize=10; graphType=4; randomParam=0.1; phi1=0.2; phi2=0.2; }
 
   int popSize;
   int graphType;
@@ -30,7 +32,7 @@ struct SwarmConfig
   float phi1,phi2;
 };
 
-class Swarm
+class Swarm : public Optimizer
 {
 public:
   int populationSize, dimension;
@@ -41,13 +43,14 @@ public:
 	Swarm(SwarmConfig cfg);
 
   void setupGraph(int graphType, float randomParam);
-  void update();
+  
+	// Optimizer implementation
+	void update();
+	void setFitness(int particle, float fitness) { swarm[particle].fitness = fitness; }
+	float* getStateVector(int particle) { return &swarm[particle].position[0]; }
 
 	static int numGraphTypes();
 	static const char* graphTypeNames[];
 
 };
-
-
-double normaldistributionvariable(double mean, double stdev);
 

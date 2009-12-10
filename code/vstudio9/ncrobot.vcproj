@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="ncrobot"
 	ProjectGUID="{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}"
 	RootNamespace="ncrobot"
@@ -45,7 +45,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -61,7 +61,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib"
+				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib ..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -118,7 +119,7 @@
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;&quot;..\..\libs\SDL_ttf-2.0.9\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;FREEGLUT_EXPORTS;FREEGLUT_STATIC"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -175,99 +176,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\CfgParser.cpp"
+				RelativePath="..\GAOptimizer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\CfgParser.h"
+				RelativePath="..\ThreadManager.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Color.cpp"
+				RelativePath="..\ThreadManager.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Color.h"
-				>
-			</File>
-			<File
-				RelativePath="..\DebugTrace.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\DebugTrace.h"
-				>
-			</File>
-			<File
-				RelativePath="..\InputBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\InputBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Matrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Matrix.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Matrix22.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OpenGL.h"
-				>
-			</File>
-			<File
-				RelativePath="..\PSOWalker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\PSOWalker.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Render.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Render.h"
-				>
-			</File>
-			<File
-				RelativePath="..\StdIncl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Test.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Test.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Vector.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Vector.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Vector2.h"
-				>
-			</File>
-			<File
-				RelativePath="..\XForm.h"
+				RelativePath="..\Walker.cpp"
 				>
 			</File>
 		</Filter>
@@ -276,6 +197,18 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\GAOptimizer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Optimizer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Walker.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -312,7 +245,95 @@
 			>
 		</File>
 		<File
+			RelativePath="..\CfgParser.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\CfgParser.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Color.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Color.h"
+			>
+		</File>
+		<File
+			RelativePath="..\DebugTrace.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\DebugTrace.h"
+			>
+		</File>
+		<File
+			RelativePath="..\InputBuffer.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\InputBuffer.h"
+			>
+		</File>
+		<File
+			RelativePath="..\main.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Matrix.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Matrix.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Matrix22.h"
+			>
+		</File>
+		<File
+			RelativePath="..\OpenGL.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Render.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Render.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\data\robot.mdl"
+			>
+		</File>
+		<File
+			RelativePath="..\StdIncl.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Test.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Test.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Vector.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Vector.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Vector2.h"
+			>
+		</File>
+		<File
+			RelativePath="..\XForm.h"
 			>
 		</File>
 	</Files>

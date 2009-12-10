@@ -6,7 +6,7 @@
 
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
 
-class PSOWalker : public Test
+class Walker : public Test
 {
 public:
 	b2Vec2 m_offset;
@@ -28,9 +28,12 @@ public:
 		motors.push_back(m);
 
 		ParamInfo inp;
-		inp.min = -100.0f;
-		inp.max = 100.0f;
+		inp.min = -40.0f;
+		inp.max = 40.0f;
 		inputs.push_back(inp);
+		inputs.push_back(inp);
+		inp.min = -10.0f;
+		inp.max = 10.0f;
 		inputs.push_back(inp);
 		inputs.push_back(inp);
 	}
@@ -40,36 +43,42 @@ public:
 		for(int i=0;i<motors.size();i++) {
 			int f = motors[i].paramIndex;
 			//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
-			float s = params[f+1] * cosf(params[f+1] * m_time - params[f+2]);
+			float s = params[f] + params[f+1] * cosf(params[f+2] * 0.01f * m_time - params[f+3] * 0.01f);
 			motors[i].joint->SetMotorSpeed(s);
 		}
 	}
 
-
-	void CreateLeg(float a0, float a1)
+	float GetScore()
 	{
+		return chassis->GetWorldCenter().x;
+	//	return chassis->GetLinearVelocity().x;
+	}
+
+	void CreateLeg(b2Vec2 start)
+	{
+		float mmt=2000.0f;
 		float kneeY = m_offset.y*0.5f;
 		// upper leg, distance joint to chassis
 
 		b2BodyDef upperDef;
-		upperDef.position = b2Vec2(a0, kneeY);
+		upperDef.position = b2Vec2(start.x, start.y*0.5f);
 		
 		Motor m;
 		m.body = m_world->CreateBody(&upperDef);
 		b2CircleDef cd;
 		cd.density=1.0f;
 		cd.radius=1.0f;
-		cd.filter.groupIndex=-1;
+		cd.filter.groupIndex=1;
 		m.body->CreateShape(&cd);
 		m.body->SetMassFromShapes();
 
 		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, m.body, chassis->GetWorldCenter());
+		jd.Initialize(chassis, m.body, start);
 		jd.enableMotor=true;
-		jd.maxMotorTorque=100.0f;
-		jd.enableLimit=true;
-		jd.lowerAngle = -3.14*0.25;
-		jd.upperAngle = 3.14*0.25;
+		jd.maxMotorTorque=mmt;
+		jd.enableLimit=false;
+		jd.lowerAngle = -3.14*0.5;
+		jd.upperAngle = 3.14*0.5;
 		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 		AddMotor(m);
 
@@ -77,47 +86,51 @@ public:
 		b2PolygonDef foot;
 		foot.SetAsBox(0.8f, 0.4f);
 		foot.density=1.0f;
-		foot.filter.groupIndex =-1;
+		foot.filter.groupIndex =1;
 		Motor f;
 		b2BodyDef fd;
-		fd.position=b2Vec2(a1, 0.0f);
+		fd.position=b2Vec2(start.x, 0.0f);
 		f.body = m_world->CreateBody(&fd);
 		f.body->CreateShape(&foot);
 		f.body->SetMassFromShapes();
 		jd.Initialize(m.body, f.body, m.body->GetWorldCenter());
 		jd.enableMotor=true;
-		jd.maxMotorTorque=100.0f;
+		jd.maxMotorTorque=mmt;
 		jd.enableLimit=false;
 		f.joint=(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 
 		AddMotor(f);
 	}
 
-	PSOWalker(int legs)
+	Walker(int legs)
 	{
-		m_offset.Set(0.0f, 8.0f);
+		m_offset.Set(0.0f, 10.0f);
+
+		float ld = 6.0f;
+		float w = ld * legs;
 
 		{
 			b2PolygonDef sd;
-			sd.SetAsBox(100.0f, 10.0f);
+			float e=300.0f;
+			sd.SetAsBox(e, 10.0f);
 
 			b2BodyDef bd;
 			bd.position.Set(0.0f, -10.0f);
 			b2Body* ground = m_world->CreateBody(&bd);
 			ground->CreateShape(&sd);
 
-			sd.SetAsBox(0.5f, 5.0f, b2Vec2(-100.0f, 15.0f), 0.0f);
+			sd.SetAsBox(0.5f, 5.0f, b2Vec2(-e, 15.0f), 0.0f);
 			ground->CreateShape(&sd);
 
-			sd.SetAsBox(0.5f, 5.0f, b2Vec2(100.0f, 15.0f), 0.0f);
+			sd.SetAsBox(0.5f, 5.0f, b2Vec2(e, 15.0f), 0.0f);
 			ground->CreateShape(&sd);
 		}
 
 		{
 			b2PolygonDef sd;
-			sd.density = 1.0f;
-			sd.SetAsBox(2.5f, 1.0f);
-			sd.filter.groupIndex = -1;
+			sd.density = 0.2f;
+			sd.SetAsBox(w*0.5f, 1.0f);
+			sd.filter.groupIndex = 1;
 			b2BodyDef bd;
 			bd.position = m_offset;
 			chassis = m_world->CreateBody(&bd);
@@ -125,11 +138,32 @@ public:
 			chassis->SetMassFromShapes();
 		}
 
-		for(int x=0;x<legs/2;x++) {
-			int v=x+1;
-			CreateLeg(v,2*v);
-			CreateLeg(-v,-2*v);
+		for(int x=0;x<legs;x++) {
+			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
 		}
+
+		// make a wheel
+
+		
+	/*	b2BodyDef upperDef;
+		upperDef.position = b2Vec2(m_offset.x+2, m_offset.y);
+		Motor m;
+		m.body = m_world->CreateBody(&upperDef);
+		b2CircleDef cd;
+		cd.density=1.0f;
+		cd.radius=2.0f;
+		cd.filter.groupIndex=-1;
+		m.body->CreateShape(&cd);
+		m.body->SetMassFromShapes();
+
+		b2RevoluteJointDef jd;
+		jd.Initialize(chassis, m.body, upperDef.position);
+		jd.enableMotor=true;
+		jd.maxMotorTorque=2000;
+		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
+		AddMotor(m);
+
+		CreateLeg(m_offset);*/
 	}
 
 	void SetupForPSO()
@@ -177,29 +211,30 @@ public:
 		params.assign(v,v+params.size());
 	}
 
-	float GetScore()
-	{
-		return chassis->GetWorldCenter().Length();
-	}
 
 };
 
 
 Test* CreatePSOWalker2()
 {
-	return new PSOWalker(2);
+	return new Walker(2);
 }
 
 Test* CreatePSOWalker4()
 {
-	return new PSOWalker(4);
+	return new Walker(4);
 }
 
+Test* CreatePSOWalker10()
+{
+	return new Walker(10);
+}
 
 TestEntry g_testEntries[] =
 {
 	{"2-leg walker", CreatePSOWalker2},
 	{"4-leg walker", CreatePSOWalker4},
+	{"10-leg walker", CreatePSOWalker10},
 	{0, 0	}
 };
 

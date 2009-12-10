@@ -30,7 +30,6 @@
 #include <cstdio>
 
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
-#include "PSOWalker.h"
 
 void DestructionListener::SayGoodbye(b2Joint* joint)
 {

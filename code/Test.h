@@ -164,6 +164,7 @@ public:
 	virtual void SetupForPSO() = 0;
 
 	float GetTime() { return m_time; }
+	void SetTime(float t) { m_time=t; }
 
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }

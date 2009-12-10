@@ -32,8 +32,8 @@ int Swarm::numGraphTypes() { return sizeof(graphTypeNames) / sizeof(const char*)
 
 float Normal(double mean, double stdev)
 {
-  float U1=((rand()%32000)+1)/32000.0;
-  float U2=((rand()%32000)+1)/32000.0;
+  float U1=rand()/(float)RAND_MAX;
+  float U2=rand()/(float)RAND_MAX;
 
   float Z=sqrt(-2*log(U1))*cos(2*3.14159265358979*U2);
 
@@ -42,7 +42,7 @@ float Normal(double mean, double stdev)
 
 float Uniform(float low, float high)
 {
-  return ((rand()%32000)/32000.0)*(high-low)+low;
+  return (rand()/(float)RAND_MAX)*(high-low)+low;
 }
 
 
@@ -138,8 +138,10 @@ Swarm::Swarm(SwarmConfig cfg)
     swarm[j].personalBest=vector<float>(dimension,0.0);
     swarm[j].friendBest=vector<float>(dimension,0.0);
     
-    for(i=0;i<dimension;i++) 
-      swarm[j].position[i]=((rand()%1000000)/1000000.0)*(paramRanges[i].max-paramRanges[i].min)+paramRanges[i].min;
+		for(i=0;i<dimension;i++) {
+			ParameterRange& r= paramRanges[i];
+      swarm[j].position[i] = Uniform(r.min, r.max) * 0.01f;
+		}
   }
 
 //printf("hier\n");
