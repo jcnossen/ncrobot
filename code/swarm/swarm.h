@@ -9,8 +9,7 @@ public:
   float fitness,personalOptimum,friendOptimum;
   
   std::vector<float> position,velocity,personalBest,friendBest;
-  std::vector<int> friends;
-  
+  std::vector<int> friends; 
 };
 
 
@@ -21,16 +20,6 @@ public:
 };
 
 
-struct SwarmConfig
-{
-  SwarmConfig() { popSize=10; graphType=4; randomParam=0.1; phi1=0.2; phi2=0.2; }
-
-  int popSize;
-  int graphType;
-  float randomParam;
-  std::vector<ParameterRange> paramRanges;
-  float phi1,phi2;
-};
 
 class Swarm : public Optimizer
 {
@@ -40,7 +29,7 @@ public:
   std::vector<Particle> swarm;
 	std::vector<ParameterRange> paramRanges;
 
-	Swarm(SwarmConfig cfg);
+	Swarm(SwarmConfig cfg, std::vector<ParameterRange> ranges);
 
   void setupGraph(int graphType, float randomParam);
   
@@ -51,6 +40,5 @@ public:
 
 	static int numGraphTypes();
 	static const char* graphTypeNames[];
-
 };
 

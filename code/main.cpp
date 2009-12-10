@@ -29,8 +29,6 @@
 #include "ThreadManager.h"
 
 
-
-
 namespace
 {
 	int32 testIndex = 0;
@@ -55,7 +53,7 @@ namespace
 	float simLength = 5.0f; // 5 second sim
 	bool playback=false;
 	std::vector<float> curCtlParams;
-
+	std::vector<ParameterRange> ranges;
 	SwarmConfig swarmConfig;
 }
 
@@ -66,8 +64,16 @@ struct OptimizerEntry {
 	const char*name;
 };
 
-Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
-Optimizer* CreateGA() { return new GAOptimizer(); }
+Optimizer* CreateSwarm() { 
+	return new Swarm(swarmConfig, ranges); 
+}
+Optimizer* CreateGA() { 
+	GAConfig cfg;
+	cfg.crossoverMutationRate = 0.1f;
+	cfg.pointMutationRate = 0.1f;
+	cfg.size = swarmConfig.popSize;
+	return new GAOptimizer(cfg, ranges); 
+}
 //Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
 
 OptimizerEntry optimizers[] = {
@@ -344,7 +350,6 @@ void RunSwarm(int)
 	float bestScore=-100000.0f;
 	std::vector<float> best;
 	std::vector<ParamInfo> inputs = test->GetParamInfo();
-	std::vector<ParameterRange> ranges;
 
 	int simticks = settings.hz * simLength;
 
@@ -356,10 +361,8 @@ void RunSwarm(int)
 		ranges[i].max=inputs[i].max;
 	}
 
-	Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
-
-	swarmConfig.paramRanges = ranges;
-	Swarm sw(swarmConfig);
+	Optimizer* optimizer = optimizers[selectedOptimizer].createFn(ranges);
+	int numInstances = optimizer->getSize();
 
 	bool useThreads=true;
 
@@ -368,18 +371,21 @@ void RunSwarm(int)
 	for (int i=0;i<swarmTicks;i++) {
 		d_trace("Swarm update tick: %d\n", i);
 
-		sw.update();
+		optimizer->update();
+//		sw.update();
 		ThreadManager threadManager;
 		std::vector<TestWorkItemParam> workItemParams(swarmConfig.popSize);
 
 		// post items for the simulation threads
-		for(int j=0;j<swarmConfig.popSize;j++) {
-			Particle& sp = sw.swarm[j];
+		for(int j=0;j<numInstances;j++) {
+//			Particle& sp = sw.swarm[j];
 			Test* t = entry.createFcn();
-			t->SetControlParams(&sp.position[0]);
+			
+			float* stateVec = optimizer->getStateVector(j);
+			t->SetControlParams(stateVec);
 			workItemParams[j].test = t;
 			workItemParams[j].numTicks = simticks;
-			workItemParams[j].index=j;
+			workItemParams[j].index = j;
 
 			if (useThreads) {
 				threadManager.AddWorkItem(RunTest_WorkItem, &workItemParams[j]);
@@ -393,14 +399,14 @@ void RunSwarm(int)
 		}
 
 		// Update best score
-		for(int j=0;j<swarmConfig.popSize;j++) {
-			Particle& sp = sw.swarm[j];
+		for(int j=0;j<numInstances;j++) {
 			delete workItemParams[j].test;
 			workItemParams[j].test=0;
-			sp.fitness = workItemParams[j].score;
-			if (sp.fitness > bestScore){ 
-				bestScore=sp.fitness;
-				best=sp.position;
+			float fitness = workItemParams[j].score;
+			optimizer->setFitness(j, fitness);
+			if (fitness > bestScore){ 
+				bestScore=fitness;
+				best=std::vector<float>(ranges.size(), optimizer->getStateVector(j));
 			}
 		}
 
