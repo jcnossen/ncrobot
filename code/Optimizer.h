@@ -15,7 +15,7 @@ struct SwarmConfig
   int popSize;
   int graphType;
   float randomParam;
-  float phi1,phi2;
+  float phi1,phi2,omega;
 };
 
 

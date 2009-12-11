@@ -18,7 +18,7 @@ class Swarm : public Optimizer
 {
 public:
   int populationSize, dimension;
-  std::vector<float> globalOptimal; float globalOptimum,phi1,phi2;
+  std::vector<float> globalOptimal; float phi1,phi2,omega;
   std::vector<Particle> swarm;
 	std::vector<ParameterRange> paramRanges;
 

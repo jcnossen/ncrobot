@@ -123,10 +123,11 @@ Swarm::Swarm(SwarmConfig cfg, std::vector<ParameterRange> ranges)
 	this->dimension = ranges.size();
 	this->phi1=cfg.phi1;
 	this->phi2=cfg.phi2;
+	this->omega=cfg.omega;
 
 //printf("dim=%d\n",dimension);
 	int i,j;
-  globalOptimum=0; 
+
 	swarm.resize(populationSize);
 //printf("swarmsize=%d\n",(int)swarm.size());
   for(j=0;j<populationSize;j++)
@@ -140,7 +141,7 @@ Swarm::Swarm(SwarmConfig cfg, std::vector<ParameterRange> ranges)
     
 		for(i=0;i<dimension;i++) {
 			ParameterRange& r= paramRanges[i];
-      swarm[j].position[i] = Uniform(r.min, r.max) * 0.01f;
+      swarm[j].position[i] = Uniform(r.min, r.max);
 		}
   }
 
@@ -197,6 +198,7 @@ void Swarm::update()
     //update velocity  
     for(i=0;i<dimension;i++)
     {
+      swarm[j].velocity[i]*=omega;
       swarm[j].velocity[i]+=Uniform(0,phi1)*(swarm[j].personalBest[i]-swarm[j].position[i]);
       swarm[j].velocity[i]+=Uniform(0,phi2)*(swarm[j].friendBest[i]-swarm[j].position[i]);    
     }

@@ -6,9 +6,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <cassert>
-
-#include <Box2D.h>
-
+
 #define PI 3.141593f
 
 typedef unsigned int uint;

@@ -104,7 +104,7 @@ void GAGenome::initialize( const std::vector<ParameterRange>& ranges )
 	genes[2] = 0.0001f;
 
 	for(int i=0;i<ranges.size();i++) {
-		genes[i+3] = 0.0f;//ranges[i].min + (ranges[i].max-ranges[i].min) * randf();
+		genes[i+3] = ranges[i].min + (ranges[i].max-ranges[i].min) * randf();
 	}
 }
 

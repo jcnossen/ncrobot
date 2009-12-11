@@ -12,10 +12,6 @@
 
 static char g_logfile[64];
 
-void d_setlogfile (const char *f)
-{
-	strncpy (g_logfile, f, 64);
-}
 
 void d_trace(const char *fmt, ...)
 {
