@@ -2,6 +2,24 @@
 
 #include "../Optimizer.h"
 
+struct SwarmConfig
+{
+  SwarmConfig() { 
+		popSize=10; 
+		graphType=4; 
+		randomParam=0.1; 	
+    phi1=phi2=1.49618;
+    omega=0.7298;
+	}
+
+  int popSize;
+  int graphType;
+  float randomParam;
+  float phi1,phi2,omega;
+};
+
+
+
 class Particle
 {
 public:

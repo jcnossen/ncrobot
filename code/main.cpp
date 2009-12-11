@@ -49,6 +49,8 @@ namespace
 	bool rMouseDown;
 	b2Vec2 lastp;
 	int swarmTicks=20;
+	int optimTime=10; 
+	int32 useTime=0;
 #ifdef _DEBUG
 	int numSimThreads=1;
 #else
@@ -59,7 +61,10 @@ namespace
 	std::vector<float> curCtlParams;
 	std::vector<ParameterRange> ranges;
 	SwarmConfig swarmConfig;
+	GLUI_Button* optimizeButton;
+	bool quitOptim=false;
 }
+
 
 typedef Optimizer* OptimizerCreateFn();
 
@@ -150,8 +155,14 @@ void SetupTest(std::vector<float>* ctlParams=0)
 	} else playback=false;
 }
 
+
 void SimulationLoop()
 {
+	if (settings.psoRun)
+		optimizeButton->set_name("Stop optimization");
+	else
+		optimizeButton->set_name("Run optimization");
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -160,10 +171,12 @@ void SimulationLoop()
 	test->SetTextLine(30);
 	settings.hz = settingsHz;
 
-	if (playback && test->GetTime() >= simLength) 
-		SetupTest(&curCtlParams);
+	if (!settings.psoRun) {
+		if (playback && test->GetTime() >= simLength) 
+			SetupTest(&curCtlParams);
 
-	test->Step(&settings);
+		test->Step(&settings);
+	}
 
 	DrawString(5, 15, entry->name);
 
@@ -349,14 +362,16 @@ void RunTest_WorkItem(void* d) {
 	p->score = p->test->GetScore();
 }
 
-void RunSwarm(int)
-{
+
+int OptimizationThreadMain (void *param) {
 	float bestScore=-100000.0f;
 	std::vector<float> best;
 	std::vector<ParamInfo> inputs = test->GetParamInfo();
 
+	Uint32 startTicks = SDL_GetTicks();
 	int simticks = settings.hz * simLength;
-
+	
+	quitOptim = false;
 	settings.psoRun = true;
 
 	ranges.resize(inputs.size());
@@ -372,11 +387,19 @@ void RunSwarm(int)
 
 	TestEntry& entry = g_testEntries[testIndex];
 
-	for (int i=0;i<swarmTicks;i++) {
-		d_trace("Swarm update tick: %d\n", i);
+	int i = 0;
+	while (!quitOptim) {
+		float t = (SDL_GetTicks()-startTicks) * 0.001f;
+
+		if (useTime) {
+			if (t > optimTime)
+				break;
+		} else if (i == swarmTicks)
+			break;
+
+		d_trace("Swarm update tick: %d. T (minutes)=%f\n", i, t/60.0f);
 
 		optimizer->update();
-//		sw.update();
 		ThreadManager threadManager;
 		std::vector<TestWorkItemParam> workItemParams(swarmConfig.popSize);
 
@@ -416,6 +439,7 @@ void RunSwarm(int)
 		}
 
 		d_trace("; BestLen: %f\n", bestScore);
+		i++;
 	}
 
 	SetupTest(&best);
@@ -427,6 +451,15 @@ void RunSwarm(int)
 	}
 
 	settings.psoRun = false;
+	return 0;
+}
+
+void RunSwarm(int)
+{
+	if (!settings.psoRun)  {
+		SDL_CreateThread(OptimizationThreadMain, 0);
+	} else
+		quitOptim = true;
 }
 
 
@@ -494,28 +527,17 @@ int main(int argc, char** argv)
 	glui->add_spinner("Swarm size", GLUI_SPINNER_INT, &swarmConfig.popSize);
 	glui->add_checkbox("Motor control", &settings.motorCtl);
 	glui->add_spinner("Simulation Threads", GLUI_SPINNER_INT, &numSimThreads);
-	glui->add_spinner("Sim length for optimizer", GLUI_SPINNER_FLOAT, &simLength);
+	glui->add_spinner("Robot sim length", GLUI_SPINNER_FLOAT, &simLength);
+	glui->add_checkbox("Stop at optim time", &useTime); 
+	glui->add_spinner("Max optimize time (s)", GLUI_SPINNER_INT, &optimTime);
 
 	glui->add_separator();
 
 	GLUI_Panel* drawPanel =	glui->add_panel("Draw");
 	glui->add_checkbox_to_panel(drawPanel, "Shapes", &settings.drawShapes);
 	glui->add_checkbox_to_panel(drawPanel, "Joints", &settings.drawJoints);
-//	glui->add_checkbox_to_panel(drawPanel, "Core Shapes", &settings.drawCoreShapes);
-//	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
-//	glui->add_checkbox_to_panel(drawPanel, "OBBs", &settings.drawOBBs);
-//	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
-// 	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
-// 	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
-// 	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);
-// 	glui->add_checkbox_to_panel(drawPanel, "Friction Forces", &settings.drawFrictionForces);
-// 	glui->add_checkbox_to_panel(drawPanel, "Center of Masses", &settings.drawCOMs);
-// 	glui->add_checkbox_to_panel(drawPanel, "Statistics", &settings.drawStats);
 
-	//glui->add_button("Deactivate panel", 0, DeactivatePanel);
-
-
-	glui->add_button("Swarm optimization",0, RunSwarm);
+	optimizeButton = glui->add_button("Run optimization",0, RunSwarm);
 	glui->add_button("Reset", 0, Reset);
 	glui->add_button("Single Step", 0, SingleStep);
 

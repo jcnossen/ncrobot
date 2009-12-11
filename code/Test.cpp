@@ -63,8 +63,13 @@ void Test::AddMotor(Motor m)
 	inp.max = 100.0f;
 	inputs.push_back(inp);
 	inputs.push_back(inp);
-	inp.min = -20.0f;
-	inp.max = 20.0f;
+	inp.min = -40.0f;
+	inp.max = 40.0f;
+	inputs.push_back(inp);
+	inputs.push_back(inp);
+	inputs.push_back(inp);
+
+	inputs.push_back(inp);
 	inputs.push_back(inp);
 	inputs.push_back(inp);
 }
@@ -72,9 +77,14 @@ void Test::AddMotor(Motor m)
 void Test::UpdateMotors()
 {
 	for(int i=0;i<motors.size();i++) {
-		int f = motors[i].paramIndex;
+		b2RevoluteJoint* j = motors[i].joint;
+		float *param = &params[motors[i].paramIndex];
 		//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
-		float s = params[f] + params[f+1] * cosf(params[f+2] * 0.01f * m_time - params[f+3] * 0.01f);
+		float ang = j->GetJointAngle ();
+		float angSpeed = j->GetJointSpeed();
+		float angParent = j->GetBody2()->GetAngle();
+		// a + b * ang + c * cos(d * t - e) + f * angParent + g * angSpeed + h* ang^2
+		float s = param[0] + param[1] * ang + param[2] * cosf(param[3] * m_time - param[4]) + param[5] * angParent + param[6] * angSpeed + param[7] * (ang*ang);
 		motors[i].joint->SetMotorSpeed(s);
 	}
 }
@@ -84,6 +94,7 @@ void Test::CreateBaseWorld()
 	b2PolygonDef sd;
 	float e=300.0f;
 	sd.SetAsBox(e, 10.0f);
+	sd.friction = 1.0f;
 
 	b2BodyDef bd;
 	bd.position.Set(0.0f, -10.0f);
@@ -174,7 +185,7 @@ Test::Test()
 	m_worldAABB.lowerBound.Set(-2000.0f, -1000.0f);
 	m_worldAABB.upperBound.Set(2000.0f, 2000.0f);
 	b2Vec2 gravity;
-	gravity.Set(0.0f, -10.0f);
+	gravity.Set(0.0f, -80.0f);
 	bool doSleep = true;
 	m_world = new b2World(m_worldAABB, gravity, doSleep);
 	m_textLine = 30;

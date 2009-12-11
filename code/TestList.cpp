@@ -8,27 +8,39 @@
 #include "Tests/BipedTest.h"
 
 
+Test* CreatePSOWalker1()
+{
+	return new Walker(1, true, true, true);
+}
+
 Test* CreatePSOWalker2()
 {
-	return new Walker(2);
+	return new Walker(2, true, false, true);
+}
+
+Test* CreatePSOWalker4K()
+{
+	return new Walker(4, true);
 }
 
 Test* CreatePSOWalker4()
 {
-	return new Walker(4);
+	return new Walker(4, false);
 }
 
 Test* CreatePSOWalker10()
 {
-	return new Walker(10);
+	return new Walker(10, false);
 }
 
 TestEntry g_testEntries[] =
 {
 	{"Simple Car", SimpleCarTest::Create },
-	{"2-leg walker", CreatePSOWalker2},
-	{"4-leg walker", CreatePSOWalker4},
-	{"10-leg walker", CreatePSOWalker10},
+	{"1-lp walker (knees)", CreatePSOWalker1},
+	{"2-lp walker (knees)", CreatePSOWalker2},
+	{"4-lp walker (knees)", CreatePSOWalker4K},
+	{"4-lp walker", CreatePSOWalker4},
+	{"10-lp walker", CreatePSOWalker10},
 	{"Biped model", BipedTest::Create},
 	{0, 0	}
 };

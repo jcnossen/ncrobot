@@ -8,7 +8,7 @@ public:
 	float GetScore()
 	{
 		b2Vec2 p = chassis->GetWorldCenter();
-		return p.y * 100 + p.x;
+		return p.x;
 		//	return chassis->GetLinearVelocity().x;
 	}
 

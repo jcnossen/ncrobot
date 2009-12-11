@@ -34,7 +34,7 @@ void GAOptimizer::update()
 
 	std::vector<GAGenome*> newPopulation;
 
-	int numParents = sortedList.size()/2;
+	int numParents = sortedList.size()/5;
 	// and store half of it in the new population
 	for (int i=0;i<numParents;i++)
 		newPopulation.push_back(sortedList[i]);
@@ -100,7 +100,7 @@ void GAGenome::initialize( const std::vector<ParameterRange>& ranges )
 
 	// first 2 genes are point mutation rate, mutation size, and crossover rate
 	genes[0] = 1.0f / genes.size();
-	genes[1] = 2.0f;
+	genes[1] = 6.0f;
 	genes[2] = 0.0001f;
 
 	for(int i=0;i<ranges.size();i++) {

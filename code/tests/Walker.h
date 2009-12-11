@@ -8,11 +8,12 @@ class Walker : public Test
 public:
 	b2Vec2 m_offset;
 	b2Body* chassis;
+	bool hasKnee, limits, collideKnees;
 
 	float GetScore()
 	{
 		b2Vec2 p = chassis->GetWorldCenter();
-		return p.y * 100 + p.x;
+		return p.x;// p.y * 100 + p.x;
 		//	return chassis->GetLinearVelocity().x;
 	}
 
@@ -26,47 +27,60 @@ public:
 		upperDef.position = b2Vec2(start.x, start.y*0.5f);
 
 		Motor m;
-		b2Body* body = m_world->CreateBody(&upperDef);
-		b2CircleDef cd;
-		cd.density=1.0f;
-		cd.radius=1.0f;
-		cd.filter.groupIndex=0;
-		body->CreateShape(&cd);
-		body->SetMassFromShapes();
+		b2Body* body;
+		
+		if (hasKnee) {
+			body = m_world->CreateBody(&upperDef);
+			b2CircleDef cd;
+			cd.density=1.0f;
+			cd.radius=1.0f;
+			cd.filter.groupIndex=-1;
+			body->CreateShape(&cd);
+			body->SetMassFromShapes();
 
-		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, body, start);
-		jd.enableMotor=true;
-		jd.maxMotorTorque=mmt;
-		jd.enableLimit=false;
-		jd.lowerAngle = -3.14*0.5;
-		jd.upperAngle = 3.14*0.5;
-		jd.collideConnected=true;
-		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
-		AddMotor(m);
+			b2RevoluteJointDef jd;
+			jd.Initialize(chassis, body, start);
+			jd.enableMotor=true;
+			jd.maxMotorTorque=mmt;
+			jd.enableLimit=limits;
+			jd.lowerAngle = -3.14*0.4f;
+			jd.upperAngle = 3.14*0.4f;
+			jd.collideConnected=collideKnees;
+			m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
+			AddMotor(m);
+		}
 
 		// lower leg
 		b2PolygonDef foot;
 		foot.SetAsBox(0.8f, 0.4f);
 		foot.density=1.0f;
-		foot.filter.groupIndex =0 ;
+		foot.filter.groupIndex = -1;
 		Motor f;
 		b2BodyDef fd;
 		fd.position=b2Vec2(start.x, 0.0f);
 		b2Body* fb = m_world->CreateBody(&fd);
 		fb->CreateShape(&foot);
 		fb->SetMassFromShapes();
-		jd.Initialize(body, fb, body->GetWorldCenter());
+		b2RevoluteJointDef jd;
+		if (hasKnee)
+			jd.Initialize(body, fb, body->GetWorldCenter());
+		else
+			jd.Initialize(chassis, fb, start);
+
 		jd.enableMotor=true;
 		jd.maxMotorTorque=mmt;
-		jd.enableLimit=false;
+		jd.enableLimit=limits;
+		jd.collideConnected=collideKnees;
 		f.joint=(b2RevoluteJoint*)m_world->CreateJoint(&jd);
 
 		AddMotor(f);
 	}
 
-	Walker(int legs)
+	Walker(int legs, bool knees, bool limits=true, bool collide=false)
 	{
+		this->limits = limits;
+		this->collideKnees = collide;
+		hasKnee = knees;
 		m_offset.Set(0.0f, 10.0f);
 
 		float ld = 6.0f;
@@ -103,7 +117,10 @@ public:
 
 		for(int x=0;x<legs;x++) {
 			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
-		}
+		}/*
+		for(int x=0;x<legs;x++) {
+			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
+		}*/
 
 		// make a wheel
 
