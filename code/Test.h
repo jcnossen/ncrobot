@@ -157,11 +157,13 @@ public:
 	void MouseMove(const b2Vec2& p);
 	void SetupListeners();
 
-	virtual std::vector<ParamInfo> GetParamInfo() = 0;
-	virtual void SetControlParams(float* vals) = 0;
+	std::vector<ParamInfo> GetParamInfo();
+	void SetControlParams(float* vals);
+
+	void CreateBaseWorld();
 
 	virtual float GetScore() = 0;
-	virtual void SetupForPSO() = 0;
+	void SetupForPSO();
 
 	float GetTime() { return m_time; }
 	void SetTime(float t) { m_time=t; }
@@ -169,6 +171,8 @@ public:
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
 	virtual void BoundaryViolated(b2Body* body) { B2_NOT_USED(body); }
+
+	virtual void UpdateMotors();
 
 protected:
 	friend class DestructionListener;
@@ -186,6 +190,20 @@ protected:
 	b2World* m_world;
 	b2MouseJoint* m_mouseJoint;
 	float m_time;
+
+	
+
+	std::vector<float> params;
+
+	struct Motor {
+		b2RevoluteJoint* joint;
+		int paramIndex;
+	};
+
+	std::vector<ParamInfo> inputs;
+	std::vector<Motor> motors;
+
+	void AddMotor(Motor m);
 };
 
 #endif

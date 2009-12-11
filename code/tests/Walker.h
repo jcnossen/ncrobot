@@ -2,6 +2,7 @@
 
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
 
+
 class Walker : public Test
 {
 public:
@@ -25,16 +26,16 @@ public:
 		upperDef.position = b2Vec2(start.x, start.y*0.5f);
 
 		Motor m;
-		m.body = m_world->CreateBody(&upperDef);
+		b2Body* body = m_world->CreateBody(&upperDef);
 		b2CircleDef cd;
 		cd.density=1.0f;
 		cd.radius=1.0f;
 		cd.filter.groupIndex=0;
-		m.body->CreateShape(&cd);
-		m.body->SetMassFromShapes();
+		body->CreateShape(&cd);
+		body->SetMassFromShapes();
 
 		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, m.body, start);
+		jd.Initialize(chassis, body, start);
 		jd.enableMotor=true;
 		jd.maxMotorTorque=mmt;
 		jd.enableLimit=false;
@@ -52,10 +53,10 @@ public:
 		Motor f;
 		b2BodyDef fd;
 		fd.position=b2Vec2(start.x, 0.0f);
-		f.body = m_world->CreateBody(&fd);
-		f.body->CreateShape(&foot);
-		f.body->SetMassFromShapes();
-		jd.Initialize(m.body, f.body, m.body->GetWorldCenter());
+		b2Body* fb = m_world->CreateBody(&fd);
+		fb->CreateShape(&foot);
+		fb->SetMassFromShapes();
+		jd.Initialize(body, fb, body->GetWorldCenter());
 		jd.enableMotor=true;
 		jd.maxMotorTorque=mmt;
 		jd.enableLimit=false;

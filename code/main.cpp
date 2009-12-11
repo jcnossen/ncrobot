@@ -49,7 +49,11 @@ namespace
 	bool rMouseDown;
 	b2Vec2 lastp;
 	int swarmTicks=20;
+#ifdef _DEBUG
+	int numSimThreads=1;
+#else
 	int numSimThreads=4;
+#endif
 	float simLength = 5.0f; // 5 second sim
 	bool playback=false;
 	std::vector<float> curCtlParams;
@@ -143,7 +147,7 @@ void SetupTest(std::vector<float>* ctlParams=0)
 		curCtlParams = *ctlParams;
 		test->SetControlParams(&curCtlParams[0]);
 		playback=true;
-	}
+	} else playback=false;
 }
 
 void SimulationLoop()
@@ -361,7 +365,7 @@ void RunSwarm(int)
 		ranges[i].max=inputs[i].max;
 	}
 
-	Optimizer* optimizer = optimizers[selectedOptimizer].createFn(ranges);
+	Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
 	int numInstances = optimizer->getSize();
 
 	bool useThreads=true;
@@ -404,9 +408,10 @@ void RunSwarm(int)
 			workItemParams[j].test=0;
 			float fitness = workItemParams[j].score;
 			optimizer->setFitness(j, fitness);
-			if (fitness > bestScore){ 
+			if (fitness > bestScore) { 
 				bestScore=fitness;
-				best=std::vector<float>(ranges.size(), optimizer->getStateVector(j));
+				float* sv = optimizer->getStateVector(j);
+				best=std::vector<float>(sv, sv+ranges.size());
 			}
 		}
 
@@ -414,6 +419,8 @@ void RunSwarm(int)
 	}
 
 	SetupTest(&best);
+
+	delete optimizer;
 
 	for(int a=0;a<best.size();a++) {
 		d_trace("Param[%d]: %f\n", a,best[a]);

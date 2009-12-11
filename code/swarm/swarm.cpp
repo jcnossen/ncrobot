@@ -116,11 +116,11 @@ void Swarm::setupGraph(int graphType, float randomParam)
 
 
 
-Swarm::Swarm(SwarmConfig cfg)
+Swarm::Swarm(SwarmConfig cfg, std::vector<ParameterRange> ranges)
 {
 	this->populationSize = cfg.popSize;
-	this->paramRanges = cfg.paramRanges;
-	this->dimension = cfg.paramRanges.size();
+	this->paramRanges = ranges;
+	this->dimension = ranges.size();
 	this->phi1=cfg.phi1;
 	this->phi2=cfg.phi2;
 

@@ -13,13 +13,6 @@ public:
 };
 
 
-class ParameterRange 
-{
-public:
-  float min, max;
-};
-
-
 
 class Swarm : public Optimizer
 {
@@ -37,6 +30,7 @@ public:
 	void update();
 	void setFitness(int particle, float fitness) { swarm[particle].fitness = fitness; }
 	float* getStateVector(int particle) { return &swarm[particle].position[0]; }
+	int getSize() { return swarm.size(); }
 
 	static int numGraphTypes();
 	static const char* graphTypeNames[];

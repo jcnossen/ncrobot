@@ -37,8 +37,6 @@ void d_puts (const char *buf)
 {
 #ifdef DEBUGTRACE
 	OutputDebugStringA(buf);
-#else
-	fprintf(stderr, buf);
 #endif
 
 	if(g_logfile[0])

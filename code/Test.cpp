@@ -31,6 +31,74 @@
 
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
 
+
+
+void Test::SetupForPSO()
+{
+	m_world->SetDebugDraw(0);
+	m_world->SetDestructionListener(0);
+	m_world->SetBoundaryListener(0);
+	m_world->SetContactFilter(0);
+}
+
+std::vector<ParamInfo> Test::GetParamInfo()
+{
+	return inputs;
+}
+
+void Test::SetControlParams(float* v)
+{
+	if(params.empty())
+		params.resize(inputs.size());
+	params.assign(v,v+params.size());
+}
+
+void Test::AddMotor(Motor m)
+{
+	m.paramIndex = inputs.size();
+	motors.push_back(m);
+
+	ParamInfo inp;
+	inp.min = -100.0f;
+	inp.max = 100.0f;
+	inputs.push_back(inp);
+	inputs.push_back(inp);
+	inp.min = -20.0f;
+	inp.max = 20.0f;
+	inputs.push_back(inp);
+	inputs.push_back(inp);
+}
+
+void Test::UpdateMotors()
+{
+	for(int i=0;i<motors.size();i++) {
+		int f = motors[i].paramIndex;
+		//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
+		float s = params[f] + params[f+1] * cosf(params[f+2] * 0.01f * m_time - params[f+3] * 0.01f);
+		motors[i].joint->SetMotorSpeed(s);
+	}
+}
+
+void Test::CreateBaseWorld()
+{
+	b2PolygonDef sd;
+	float e=300.0f;
+	sd.SetAsBox(e, 10.0f);
+
+	b2BodyDef bd;
+	bd.position.Set(0.0f, -10.0f);
+	b2Body* ground = m_world->CreateBody(&bd);
+	ground->CreateShape(&sd);
+
+	sd.SetAsBox(0.5f, 5.0f, b2Vec2(-e, 15.0f), 0.0f);
+	ground->CreateShape(&sd);
+
+	sd.SetAsBox(0.5f, 5.0f, b2Vec2(e, 15.0f), 0.0f);
+	ground->CreateShape(&sd);
+}
+
+
+
 void DestructionListener::SayGoodbye(b2Joint* joint)
 {
 	if (test->m_mouseJoint == joint)
@@ -103,8 +171,8 @@ void ContactListener::Remove(const b2ContactPoint* point)
 
 Test::Test()
 {
-	m_worldAABB.lowerBound.Set(-200.0f, -100.0f);
-	m_worldAABB.upperBound.Set(200.0f, 200.0f);
+	m_worldAABB.lowerBound.Set(-2000.0f, -1000.0f);
+	m_worldAABB.upperBound.Set(2000.0f, 2000.0f);
 	b2Vec2 gravity;
 	gravity.Set(0.0f, -10.0f);
 	bool doSleep = true;
@@ -203,6 +271,18 @@ void Test::MouseMove(const b2Vec2& p)
 void Test::Step(TestSettings* settings)
 {
 	float32 timeStep = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
+
+	// Update motors based on time
+	if (settings->psoRun)
+		UpdateMotors();
+	else {
+		if (settings->motorCtl && params.size()>0)
+			UpdateMotors();
+		else {
+			for(int i=0;i<motors.size();i++)
+				motors[i].joint->EnableMotor(false);
+		}
+	}
 
 	if (settings->pause)
 	{
