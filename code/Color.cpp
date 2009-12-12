@@ -13,3 +13,12 @@ Color Color::White(255,255,255);
 Color Color::Black(0,0,0);
 Color Color::Grey(128,128,128);
 
+
+Color Color::getGraphColor( int i )
+{
+	static Color cols[] = {
+		Red, Green, Blue, Yellow, Purple
+	};
+
+	return cols[i%5];
+}

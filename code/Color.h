@@ -31,4 +31,7 @@ struct Color {
 			( 0xff & (int)(r*255.0f) ));
 	}
 	void set(int col) { *((uint*)&c[0]) = *(uint*)&col; }
+
+	// get a color that looks nice in a graph
+	static Color getGraphColor(int i);
 };

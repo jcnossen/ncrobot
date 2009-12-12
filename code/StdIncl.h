@@ -6,7 +6,8 @@
 #include <cstdio>
 #include <stdexcept>
 #include <cassert>
-
+
+
 #define PI 3.141593f
 
 typedef unsigned int uint;

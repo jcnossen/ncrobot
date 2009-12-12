@@ -61,17 +61,9 @@ void Test::AddMotor(Motor m)
 	ParamInfo inp;
 	inp.min = -100.0f;
 	inp.max = 100.0f;
-	inputs.push_back(inp);
-	inputs.push_back(inp);
-	inp.min = -40.0f;
-	inp.max = 40.0f;
-	inputs.push_back(inp);
-	inputs.push_back(inp);
-	inputs.push_back(inp);
 
-	inputs.push_back(inp);
-	inputs.push_back(inp);
-	inputs.push_back(inp);
+	for (int i=0;i<4;i++)
+		inputs.push_back(inp);
 }
 
 void Test::UpdateMotors()
@@ -81,10 +73,14 @@ void Test::UpdateMotors()
 		float *param = &params[motors[i].paramIndex];
 		//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
 		float ang = j->GetJointAngle ();
-		float angSpeed = j->GetJointSpeed();
-		float angParent = j->GetBody2()->GetAngle();
+// 		float angSpeed = j->GetJointSpeed();
+// 		float angParent = j->GetBody2()->GetAngle();
 		// a + b * ang + c * cos(d * t - e) + f * angParent + g * angSpeed + h* ang^2
-		float s = param[0] + param[1] * ang + param[2] * cosf(param[3] * m_time - param[4]) + param[5] * angParent + param[6] * angSpeed + param[7] * (ang*ang);
+		//float s = param[0] + param[1] * ang + param[2] * cosf(param[3] * m_time - param[4]) + param[5] * angParent + param[6] * angSpeed + param[7] * (ang*ang);
+
+//		float ad = ang -  param[2] * cosf(param[3] * m_time - param[4]);
+//		float s = param[0] + param[1] * ad;
+		float s = param[0] + param[1] * cosf( (param[2] * m_time - param[3]) * 0.01f);
 		motors[i].joint->SetMotorSpeed(s);
 	}
 }

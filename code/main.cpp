@@ -27,7 +27,7 @@
 #include "GAOptimizer.h"
 
 #include "ThreadManager.h"
-
+#include "Graph.h"
 
 namespace
 {
@@ -51,6 +51,8 @@ namespace
 	int swarmTicks=20;
 	int optimTime=10; 
 	int32 useTime=0;
+	Graph* graph;
+	int32 showGraph=0;
 #ifdef _DEBUG
 	int numSimThreads=1;
 #else
@@ -158,27 +160,25 @@ void SetupTest(std::vector<float>* ctlParams=0)
 
 void SimulationLoop()
 {
-	if (settings.psoRun)
-		optimizeButton->set_name("Stop optimization");
-	else
-		optimizeButton->set_name("Run optimization");
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	test->SetTextLine(30);
 	settings.hz = settingsHz;
 
-	if (!settings.psoRun) {
+	if (!showGraph && !settings.psoRun) {
 		if (playback && test->GetTime() >= simLength) 
 			SetupTest(&curCtlParams);
 
+		test->SetTextLine(30);
 		test->Step(&settings);
-	
-		DrawString(5, 15, SPrintf("%s. Time: %.2f Score: %.2f", entry->name, test->GetTime(), test->GetScore()).c_str());
+
+		DrawString(5, 15, SPrintf("%s. Time:%.2f. Score: %.2f", entry->name, test->GetTime(), test->GetScore()).c_str());
+	} else {
+		DrawString(5, 15, "Running optimization...");
 	}
+
 
 	glutSwapBuffers();
 
@@ -389,9 +389,14 @@ int OptimizationThreadMain (void *param) {
 
 	TestEntry& entry = g_testEntries[testIndex];
 
+	if (graph)
+		graph->setup(ranges.size());//ranges.size() * optimizer->getSize());
+
 	int i = 0;
 	while (!quitOptim) {
 		float t = (SDL_GetTicks()-startTicks) * 0.001f;
+
+	//	graph->startTick();
 
 		if (useTime) {
 			if (t > optimTime)
@@ -399,11 +404,11 @@ int OptimizationThreadMain (void *param) {
 		} else if (i == swarmTicks)
 			break;
 
-		d_trace("Swarm update tick: %d. T (minutes)=%f\n", i, t/60.0f);
+		d_trace("Swarm update tick: %d. T (minutes)=%f. ", i, t/60.0f);
 
 		optimizer->update();
 		ThreadManager threadManager;
-		std::vector<TestWorkItemParam> workItemParams(swarmConfig.popSize);
+		std::vector<TestWorkItemParam> workItemParams(optimizer->getSize());
 
 		// post items for the simulation threads
 		for(int j=0;j<numInstances;j++) {
@@ -437,10 +442,15 @@ int OptimizationThreadMain (void *param) {
 				bestScore=fitness;
 				float* sv = optimizer->getStateVector(j);
 				best=std::vector<float>(sv, sv+ranges.size());
+				if (graph) {
+					graph->startTick();
+					graph->setData(0, sv, ranges.size(), fitness);
+				}
 			}
+			//graph->setData(j * ranges.size(), optimizer->getStateVector(j), ranges.size(), fitness);
 		}
 
-		d_trace("; BestLen: %f\n", bestScore);
+		d_trace("BestScore: %f\n", bestScore);
 		i++;
 	}
 
@@ -465,24 +475,30 @@ void RunSwarm(int)
 		quitOptim = true;
 }
 
+void ShowGraph(int)
+{
+	if (!graph) {
+		graph = new Graph();
+		glutSetWindow(mainWindow);
+	}
+}
 
 int main(int argc, char** argv)
 {
-	SetupTest();
-
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
 	char title[32];
 	sprintf(title, "Box2D Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
+	glutSetOption (GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	mainWindow = glutCreateWindow(title);
-	//glutSetOption (GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
+	
 	glutDisplayFunc(SimulationLoop);
 	GLUI_Master.set_glutReshapeFunc(Resize);  
 	GLUI_Master.set_glutKeyboardFunc(Keyboard);
 	GLUI_Master.set_glutSpecialFunc(KeyboardSpecial);
 	GLUI_Master.set_glutMouseFunc(Mouse);
+
 #ifdef FREEGLUT
 	glutMouseWheelFunc(MouseWheel);
 #endif
@@ -490,6 +506,7 @@ int main(int argc, char** argv)
 
 	glui = GLUI_Master.create_glui_subwindow( mainWindow, 
 		GLUI_SUBWINDOW_RIGHT );
+	//glui = GLUI_Master.create_glui("Controls");
 
 	glui->add_statictext("Tests");
 	GLUI_Listbox* testList = glui->add_listbox("", &testSelection);
@@ -541,7 +558,7 @@ int main(int argc, char** argv)
 
 	optimizeButton = glui->add_button("Run optimization",0, RunSwarm);
 	glui->add_button("Reset", 0, Reset);
-	glui->add_button("Single Step", 0, SingleStep);
+	glui->add_checkbox("Graph", &showGraph);
 
 	glui->add_button("Quit", 0,(GLUI_Update_CB)exit);
 	glui->set_main_gfx_window( mainWindow );
@@ -549,7 +566,16 @@ int main(int argc, char** argv)
 	// Use a timer to control the frame rate.
 	glutTimerFunc(framePeriod, Timer, 0);
 
+	SetupTest();
+
+
 	glutMainLoop();
+
+	if (graph)
+		delete graph;
+
+	if (test)
+		delete test;
 
 	return 0;
 }

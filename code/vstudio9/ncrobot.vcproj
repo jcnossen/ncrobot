@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="ncrobot"
 	ProjectGUID="{EE696AB1-E933-4F56-A0AF-C77F8F9E7D1A}"
 	RootNamespace="ncrobot"
@@ -271,6 +271,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Graph.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\Graph.h"
 			>
 		</File>
@@ -287,14 +291,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\Matrix.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Matrix.h"
-			>
-		</File>
-		<File
 			RelativePath="..\Matrix22.h"
 			>
 		</File>
@@ -308,10 +304,6 @@
 		</File>
 		<File
 			RelativePath="..\Render.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\data\robot.mdl"
 			>
 		</File>
 		<File
@@ -336,14 +328,6 @@
 		</File>
 		<File
 			RelativePath="..\ThreadManager.h"
-			>
-		</File>
-		<File
-			RelativePath="..\Vector.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Vector.h"
 			>
 		</File>
 		<File

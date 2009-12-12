@@ -117,37 +117,8 @@ public:
 
 		for(int x=0;x<legs;x++) {
 			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
-		}/*
-		for(int x=0;x<legs;x++) {
-			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
-		}*/
-
-		// make a wheel
-
-
-		/*	b2BodyDef upperDef;
-		upperDef.position = b2Vec2(m_offset.x+2, m_offset.y);
-		Motor m;
-		m.body = m_world->CreateBody(&upperDef);
-		b2CircleDef cd;
-		cd.density=1.0f;
-		cd.radius=2.0f;
-		cd.filter.groupIndex=-1;
-		m.body->CreateShape(&cd);
-		m.body->SetMassFromShapes();
-
-		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, m.body, upperDef.position);
-		jd.enableMotor=true;
-		jd.maxMotorTorque=2000;
-		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
-		AddMotor(m);
-
-		CreateLeg(m_offset);*/
+		}
 	}
-
-	void Keyboard(unsigned char key)
-	{ }
 };
 
 
