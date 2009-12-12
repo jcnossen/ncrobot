@@ -10,8 +10,6 @@
 	#include <windows.h>
 #endif
 
-static char g_logfile[64];
-
 
 void d_trace(const char *fmt, ...)
 {
@@ -35,36 +33,11 @@ void d_puts (const char *buf)
 	OutputDebugStringA(buf);
 #endif
 
-	if(g_logfile[0])
-	{
-		FILE *p = fopen (g_logfile, "a");
-		if(p) {
-			fputs(buf, p);
-			fclose (p);
-		}
-	}
-
 #ifdef WIN32
 	printf (buf);
 #endif
 }
 
-void d_clearlog()
-{
-	remove (g_logfile);
-}
-
-
-void usDebugBreak()
-{
-#if defined(_DEBUG)
-	#ifdef _MSC_VER
-		__asm int 3
-	#else
-		#error implement debug break for gcc
-	#endif
-#endif
-}
 
 
 void d_assert(char *str, char *file, int line)
@@ -72,9 +45,5 @@ void d_assert(char *str, char *file, int line)
 	std::string msg = SPrintf("Assertion \"%s\" failed at line %d in \'%s\'\n", str, line, file);
 	d_trace (msg.c_str());
 
-#ifdef _DEBUG
-	usDebugBreak ();
-#else
 	throw std::runtime_error(msg.c_str());
-#endif
 }

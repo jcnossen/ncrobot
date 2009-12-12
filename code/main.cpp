@@ -56,7 +56,7 @@ namespace
 #else
 	int numSimThreads=4;
 #endif
-	float simLength = 5.0f; // 5 second sim
+	float simLength = 10.0f; // 5 second sim
 	bool playback=false;
 	std::vector<float> curCtlParams;
 	std::vector<ParameterRange> ranges;
@@ -176,9 +176,9 @@ void SimulationLoop()
 			SetupTest(&curCtlParams);
 
 		test->Step(&settings);
+	
+		DrawString(5, 15, SPrintf("%s. Time: %.2f Score: %.2f", entry->name, test->GetTime(), test->GetScore()).c_str());
 	}
-
-	DrawString(5, 15, entry->name);
 
 	glutSwapBuffers();
 
@@ -370,6 +370,8 @@ int OptimizationThreadMain (void *param) {
 
 	Uint32 startTicks = SDL_GetTicks();
 	int simticks = settings.hz * simLength;
+
+	d_trace("Starting optimization with %d threads\n", numSimThreads);
 	
 	quitOptim = false;
 	settings.psoRun = true;
@@ -457,11 +459,11 @@ int OptimizationThreadMain (void *param) {
 void RunSwarm(int)
 {
 	if (!settings.psoRun)  {
-		SDL_CreateThread(OptimizationThreadMain, 0);
+		OptimizationThreadMain(0);
+//		SDL_CreateThread(OptimizationThreadMain, 0);
 	} else
 		quitOptim = true;
 }
-
 
 
 int main(int argc, char** argv)
@@ -491,21 +493,21 @@ int main(int argc, char** argv)
 
 	glui->add_statictext("Tests");
 	GLUI_Listbox* testList = glui->add_listbox("", &testSelection);
-
 	for(int i=0;g_testEntries[i].createFcn;i++)
 		testList->add_item(i, g_testEntries[i].name);
+	testList->set_int_val(testSelection);
 
 	glui->add_statictext("Optimizer");
 	GLUI_Listbox* optimList = glui->add_listbox("", &selectedOptimizer);
 	for(int i=0;optimizers[i].createFn;i++)
 		optimList->add_item(i, optimizers[i].name);
-
 	glui->add_separator();
 
 	glui->add_statictext("Swarm graph type");
 	GLUI_Listbox* graphTypeList = glui->add_listbox("", &swarmConfig.graphType);
 	for(int i=0;i<Swarm::numGraphTypes();i++)
 		graphTypeList->add_item(i, Swarm::graphTypeNames[i]);
+	graphTypeList->set_int_val(1);//swarmConfig.graphType);
 	glui->add_separator();
 
 
