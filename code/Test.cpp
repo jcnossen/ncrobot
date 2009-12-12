@@ -409,3 +409,40 @@ void Test::Step(TestSettings* settings)
 	m_time += timeStep;
 
 }
+
+
+static unsigned int CalcStrHash(char* str, unsigned int len)
+{
+	unsigned int b    = 378551;
+	unsigned int a    = 63689;
+	unsigned int hash = 0;
+	unsigned int i    = 0;
+
+	for(i = 0; i < len; str++, i++)
+	{
+		hash = hash * a + (*str);
+		a    = a * b;
+	}
+
+	return hash;
+}
+
+// Calculate a hash based on the body state
+uint Test::CalcHash()
+{
+	uint hash = 0;
+
+	for (b2Body* b =  m_world->GetBodyList(); b;b=b->GetNext()) {
+		b2XForm xf = b->GetXForm();
+		hash ^= CalcStrHash((char*)&xf, sizeof(xf));
+
+		float32 av = b->GetAngularVelocity();
+		b2Vec2 v = b->GetLinearVelocity();
+
+		hash ^= CalcStrHash(&av, sizeof(av));
+		hash ^= CalcStrHash(&v, sizeof(v));
+	}
+
+	return hash;
+}
+

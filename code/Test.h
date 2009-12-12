@@ -174,6 +174,8 @@ public:
 
 	virtual void UpdateMotors();
 
+	uint CalcHash();
+
 protected:
 	friend class DestructionListener;
 	friend class BoundaryListener;
