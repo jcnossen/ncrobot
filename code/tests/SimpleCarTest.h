@@ -5,6 +5,8 @@ public:
 	b2Vec2 m_offset;
 	b2Body* chassis;
 
+	std::vector<b2RevoluteJoint*> wheels;
+
 	float GetScore()
 	{
 		b2Vec2 p = chassis->GetWorldCenter();
@@ -48,14 +50,20 @@ public:
 		jd.enableMotor=true;
 		jd.maxMotorTorque=2000;
 
-		Motor m;
-		m.joint =(b2RevoluteJoint*)m_world->CreateJoint(&jd);
-		AddMotor(m);
-
+		wheels.push_back((b2RevoluteJoint*)m_world->CreateJoint(&jd));
+		inputs.push_back(ParamInfo(-50,50));
 	}
 
-	void Keyboard(unsigned char key)
-	{ }
+	void Step(TestSettings* settings) {
+
+		if (!params.empty()) {
+			for(int i=0;i<wheels.size();i++)
+				wheels[i]->SetMotorSpeed(params[i]);
+		}
+
+		Test::Step(settings);
+	}
+
 
 	static Test* Create() {
 		return new SimpleCarTest();

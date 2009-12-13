@@ -30,15 +30,6 @@ public:
 		m_biped = new Biped(m_world, b2Vec2(0.0f, 4.0f));
 
 		std::vector<b2RevoluteJoint*> joints =  m_biped->getJoints();
-
-		for(int i=0;i<joints.size();i++) {
-			Motor m;
-			m.joint = joints[i];
-			m.joint->SetMaxMotorTorque(200);
-			m.joint->EnableMotor(true);
-			AddMotor(m);
-		}
-
 	}
 
 	~BipedTest()

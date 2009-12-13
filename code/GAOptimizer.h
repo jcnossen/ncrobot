@@ -36,6 +36,6 @@ private:
 
 	GAConfig config;
 
-	GAGenome* mutatedCopy(const std::vector<GAGenome*>& genomes, int parent);
+	GAGenome* mutatedCopy(const std::vector<GAGenome*>& genomes);
 };
 

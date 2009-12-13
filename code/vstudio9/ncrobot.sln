@@ -6,6 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncrobot", "ncrobot.vcproj",
 		{5A9CB908-4224-44A6-91AD-5E78DCC85128} = {5A9CB908-4224-44A6-91AD-5E78DCC85128}
 		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A} = {7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}
 		{50804869-9BB8-4871-90AB-15741ACC329F} = {50804869-9BB8-4871-90AB-15741ACC329F}
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD} = {39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Box2D", "..\..\Box2D\Build\VC8\Box2D.vcproj", "{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}"
@@ -15,6 +16,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glui", "..\..\Box2D\Build\VC8\glui.vcproj", "{5A9CB908-4224-44A6-91AD-5E78DCC85128}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestBed", "..\..\Box2D\Build\VC8\TestBed.vcproj", "{4820A670-09DE-43C1-813D-FFC0F9925445}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "optimtest", "optimtest.vcproj", "{5A9F8818-A8BE-4C28-800F-421B179F6D0A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "angelscript", "..\..\libs\angelscript\angelscript\projects\msvc9\angelscript.vcproj", "{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +47,14 @@ Global
 		{4820A670-09DE-43C1-813D-FFC0F9925445}.Debug|Win32.Build.0 = Debug|Win32
 		{4820A670-09DE-43C1-813D-FFC0F9925445}.Release|Win32.ActiveCfg = Release|Win32
 		{4820A670-09DE-43C1-813D-FFC0F9925445}.Release|Win32.Build.0 = Release|Win32
+		{5A9F8818-A8BE-4C28-800F-421B179F6D0A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5A9F8818-A8BE-4C28-800F-421B179F6D0A}.Debug|Win32.Build.0 = Debug|Win32
+		{5A9F8818-A8BE-4C28-800F-421B179F6D0A}.Release|Win32.ActiveCfg = Release|Win32
+		{5A9F8818-A8BE-4C28-800F-421B179F6D0A}.Release|Win32.Build.0 = Release|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|Win32.Build.0 = Debug|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|Win32.ActiveCfg = Release|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

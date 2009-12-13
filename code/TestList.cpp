@@ -7,41 +7,36 @@
 
 #include "Tests/BipedTest.h"
 
+TestFactory<SimpleCarTest> simpleCarTestFactory("Simple car test");
 
-Test* CreatePSOWalker1()
-{
-	return new Walker(1, true, true, true);
-}
+class WalkerTestFactory : TestFactoryBase {
+public:
+	int getNumTests() { return 4; }
 
-Test* CreatePSOWalker2()
-{
-	return new Walker(2, true, false, true);
-}
+	const char* getTestName(int i) { 
+		const char *names[] = {
+			"1-lp walker (knees)",
+			"2-lp walker (knees)",
+			"4-lp walker (knees)",
+			"4-lp walker",
+			"10-lp walker"
+		};
 
-Test* CreatePSOWalker4K()
-{
-	return new Walker(4, true);
-}
+		return names[i];
+	}
 
-Test* CreatePSOWalker4()
-{
-	return new Walker(4, false);
-}
+	Test* createTest(int i) {
 
-Test* CreatePSOWalker10()
-{
-	return new Walker(10, false);
-}
+		switch (i) {
+			case 0: return new Walker(1, true);
+			case 1: return new Walker(2, true);
+			case 2: return new Walker(4, true);
+			case 3: return new Walker(4, false);
+			case 4: return new Walker(10, false);
+		}
 
-TestFactory g_testEntries[] =
-{
-	{"Simple Car", SimpleCarTest::Create },
-	{"1-lp walker (knees)", CreatePSOWalker1},
-	{"2-lp walker (knees)", CreatePSOWalker2},
-	{"4-lp walker (knees)", CreatePSOWalker4K},
-	{"4-lp walker", CreatePSOWalker4},
-	{"10-lp walker", CreatePSOWalker10},
-	{"Biped model", BipedTest::Create},
-	{0, 0	}
+		return 0;
+	}
 };
+
 

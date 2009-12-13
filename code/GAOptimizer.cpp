@@ -25,47 +25,39 @@ static bool GenomeComparer(GAGenome* a, GAGenome* b) {
 
 void GAOptimizer::Update()
 {
-	// select the better half of the population, 
 	std::vector<GAGenome*> sortedList;
 	sortedList.reserve(genomes.size());
 	for(int i=0;i<genomes.size();i++)
 		sortedList.push_back(genomes[i]);
 	std::sort(sortedList.begin(), sortedList.end(), GenomeComparer);
 
+	int numParents = sortedList.size()/5;
+	sortedList.erase (sortedList.begin() + numParents, sortedList.end());
+
 	std::vector<GAGenome*> newPopulation;
 
-	int numParents = sortedList.size()/5;
-	// and store half of it in the new population
-	for (int i=0;i<numParents;i++)
-		newPopulation.push_back(sortedList[i]);
-
 	// then fill up the remainder with mutated genomes
-	while (newPopulation.size() < config.size) {
-		int parent = rand() % numParents;
-		GAGenome* mutated = mutatedCopy(sortedList, parent);
+	for (int i=0;i<genomes.size();i++) {
+		GAGenome* mutated = mutatedCopy(sortedList);
 		newPopulation.push_back(mutated);
 	}
 
-	// delete the genomes that did not have enough fitness
-	for (int i=numParents; i < sortedList.size(); i++) {
-		delete sortedList[i];
-	}
-
+	// delete previous generation
+	DeleteAll(sortedList);
+	
 	// replace
 	genomes = newPopulation;
 }
 
-GAGenome* GAOptimizer::mutatedCopy( const std::vector<GAGenome*>& genomes, int parentIndex )
+GAGenome* GAOptimizer::mutatedCopy( const std::vector<GAGenome*>& genomes )
 {
 	// point mutations
-
-	GAGenome *parent = genomes[parentIndex];
+	GAGenome *parent = genomes[rand() % genomes.size()];
 	float pmRate = parent->genes[0];
 	float pmSize = parent->genes[1];
 	float crossoverRate = parent->genes[2];
 
-	d_trace("Parent %d has child. pmrate=%f, pmsize=%f\n", parentIndex, pmRate,pmSize);
-
+//	d_trace("Parent %d has child. pmrate=%f, pmsize=%f\n", parentIndex, pmRate,pmSize);
 	GAGenome *child = new GAGenome(*parent);
 
 	for(int a=0;a<child->genes.size();a++) {
@@ -74,6 +66,13 @@ GAGenome* GAOptimizer::mutatedCopy( const std::vector<GAGenome*>& genomes, int p
 	}
 
 	if (randf() < crossoverRate) {
+		GAGenome* p2 = genomes[rand() % genomes.size()];
+		int len = 2 + (int)(randf()*5+0.5f);
+		int start = rand()%(p2->genes.size()-len);
+		int dstPos = rand()%(child->genes.size()-len);
+
+		for (int i=0;i<len;i++)
+			child->genes[dstPos+i]=p2->genes[start+i];
 	}
 	return child;
 }

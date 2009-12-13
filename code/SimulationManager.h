@@ -33,7 +33,7 @@ public:
 	void CheckHash();
 	void SetOptimizer(Optimizer* optimizer);
 	void StartOptimization(SimulationConfig cfg);
-	void ChangeTest(TestFactory *f);
+	void ChangeTest(TestEntry *f);
 	void StopOptimization();
 	bool IsOptimizing() { return isOptimizing; }
 	Test* GetTest() { return test; }
@@ -48,7 +48,7 @@ public:
 protected:
 	Test* test;
 	TestSettings optimizeSettings;
-	TestFactory* testFactory;
+	TestEntry* testEntry;
 	Optimizer* optimizer;
 	bool isOptimizing, stopOptimization;
 	SimulationConfig config;

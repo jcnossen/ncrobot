@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;&quot;..\..\libs\SDL_ttf-2.0.9\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib ..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib"
+				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib ..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib ..\..\libs\angelscript\angelscript\lib\angelscriptd.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;&quot;..\..\libs\SDL_ttf-2.0.9\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;FREEGLUT_EXPORTS;FREEGLUT_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -140,7 +140,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib opengl32.lib glu32.lib ..\..\libs\SDL_ttf-2.0.9\lib\SDL_ttf.lib"
+				AdditionalDependencies="..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib opengl32.lib glu32.lib ..\..\libs\angelscript\angelscript\lib\angelscript.lib"
+				OutputFile="../../bin/ncrobot.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"

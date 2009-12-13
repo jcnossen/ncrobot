@@ -5,21 +5,21 @@
 
 class Walker : public Test
 {
+	struct Motor {
+		b2RevoluteJoint* joint;
+		int paramIndex;
+	};
+
+	std::vector<Motor> motors;
 public:
+
 	b2Vec2 m_offset;
 	b2Body* chassis;
 	bool hasKnee, limits, collideKnees;
 
-	float GetScore()
-	{
-		b2Vec2 p = chassis->GetWorldCenter();
-		return p.x;// p.y * 100 + p.x;
-		//	return chassis->GetLinearVelocity().x;
-	}
-
 	void CreateLeg(b2Vec2 start)
 	{
-		float mmt=1000.0f;
+		float mmt=700.0f;
 		float kneeY = m_offset.y*0.5f;
 		// upper leg, distance joint to chassis
 
@@ -34,7 +34,7 @@ public:
 			b2CircleDef cd;
 			cd.density=1.0f;
 			cd.radius=1.0f;
-			cd.filter.groupIndex=0;
+			cd.filter.groupIndex=collideKnees ? 1:-1;
 			body->CreateShape(&cd);
 			body->SetMassFromShapes();
 
@@ -54,7 +54,7 @@ public:
 		b2PolygonDef foot;
 		foot.SetAsBox(0.8f, 0.4f);
 		foot.density=1.0f;
-		foot.filter.groupIndex = 0;
+		foot.filter.groupIndex = collideKnees ? 1 : -1;
 		Motor f;
 		b2BodyDef fd;
 		fd.position=b2Vec2(start.x, .5f);
@@ -81,14 +81,14 @@ public:
 		this->limits = limits;
 		this->collideKnees = collide;
 		hasKnee = knees;
-		m_offset.Set(0.0f, 10.0f);
+		m_offset.Set(0.0f, 6.0f);
 
-		float ld = 6.0f;
+		float ld = 4.0f;
 		float w = ld * legs;
 
 		b2PolygonDef sd;
 		sd.density = 0.2f;
-		sd.SetAsBox(w*0.5f, 1.0f);
+		sd.SetAsBox(w*0.4f, 1.0f);
 		sd.filter.groupIndex = 0;
 		b2BodyDef bd;
 		bd.position = m_offset;
@@ -100,6 +100,49 @@ public:
 			CreateLeg(b2Vec2(-w/2+ld*(x+0.5f), m_offset.y));
 		}
 	}
+
+	void Step(TestSettings* settings) {
+		UpdateMotors();
+
+		Test::Step(settings);
+	}
+
+	void AddMotor(Motor m)
+	{
+		m.paramIndex = inputs.size();
+		motors.push_back(m);
+
+		ParamInfo inp (-100,100);
+
+		for (int i=0;i<7;i++)
+			inputs.push_back(inp);
+	}
+
+	void UpdateMotors()
+	{
+		if(params.empty())
+			return;
+
+		for(int i=0;i<motors.size();i++) {
+			b2RevoluteJoint* j = motors[i].joint;
+			float *param = &params[motors[i].paramIndex];
+			float ang = j->GetJointAngle ();
+
+			float wantedAng = param[0] + param[1] * sinf((param[2] * m_time - param[3]) * 0.1f) + param[4] * sinf(ang) + param[5] * chassis->GetAngle();
+			float s = param[6];
+			
+			j->SetMotorSpeed( (ang > wantedAng) ? -s : s);
+		}
+	}
+
+
+	float GetScore()
+	{
+		b2Vec2 p = chassis->GetWorldCenter();
+		return p.x;
+		//	return chassis->GetLinearVelocity().x;
+	}
+
 };
 
 

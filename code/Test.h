@@ -25,7 +25,28 @@
 class Test;
 struct TestSettings;
 
-typedef Test* TestCreateFcn();
+class TestFactoryBase {
+	TestFactoryBase* next;
+	static TestFactoryBase* list;
+
+public:
+	TestFactoryBase();
+	static std::vector<TestFactoryBase*> getFactoryList();
+
+	virtual int getNumTests() = 0;
+	virtual const char* getTestName(int i) = 0;
+	virtual Test* createTest(int i) = 0;
+};
+
+template<typename T>
+class TestFactory : public TestFactoryBase {
+	const char *name;
+public:
+	TestFactory(const char *n) { name=n; }
+	int getNumTests() { return 1; }
+	const char* getTestName(int i) { return name; }
+	Test* createTest(int i) { return new T; }
+};
 
 struct TestSettings
 {
@@ -78,13 +99,14 @@ struct TestSettings
 	bool drawing() { return optimizing==false; }
 };
 
-struct TestFactory
-{
+struct TestEntry {
+	TestFactoryBase* factory;
 	const char *name;
-	TestCreateFcn *createFcn;
+	int index;
+
+	Test* create() { return factory->createTest(index); }
 };
 
-extern TestFactory g_testEntries[];
 // This is called when a joint in the world is implicitly destroyed
 // because an attached body is destroyed. This gives us a chance to
 // nullify the mouse joint.
@@ -137,6 +159,12 @@ struct ContactPoint
 
 struct ParamInfo
 {
+	ParamInfo(float min_, float max_, const char* name_=0){ 
+		min=min_;
+		max=max_;
+		name=name_;
+	}
+
 	float min, max;
 	const char* name;
 };
@@ -175,8 +203,6 @@ public:
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
 	virtual void BoundaryViolated(b2Body* body) { B2_NOT_USED(body); }
 
-	virtual void UpdateMotors();
-
 	uint CalcHash();
 
 protected:
@@ -197,16 +223,7 @@ protected:
 	float m_time;
 
 	std::vector<float> params;
-
-	struct Motor {
-		b2RevoluteJoint* joint;
-		int paramIndex;
-	};
-
 	std::vector<ParamInfo> inputs;
-	std::vector<Motor> motors;
-
-	void AddMotor(Motor m);
 };
 
 #endif

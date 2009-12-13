@@ -8,7 +8,7 @@ int DIM=30;
 double pi=3.1415926535897;
   
 float calcAckley(float *params) {
-  float f=20+exp(1);
+  float f=20+expf(1);
 
   float sumsq=0;
   for(int k=0;k<DIM;k++)
@@ -31,8 +31,7 @@ int main(int argc, char*argv[])
   int i,j,k;
   
   Optimizer* optimizer = 0;
-  
-  
+    
   std::vector<ParameterRange> ranges(DIM);
   for(i=0;i<DIM;i++)
   {
@@ -42,7 +41,7 @@ int main(int argc, char*argv[])
 
   int popSize = 100;
   
-  if (true) {
+  if (false) {
     SwarmConfig cfg;
     cfg.popSize = popSize;
     cfg.phi1=cfg.phi2=1.49618;
@@ -64,23 +63,23 @@ int main(int argc, char*argv[])
 
   float BEST=-1e15;
 
-  for(i=0;i<1000;i++) {
-    optimizer->update();
+  for(i=0;i<10000;i++) {
+    optimizer->Update();
     
-    for (j=0;j<optimizer->getSize();j++) {
-      float* params = optimizer->getStateVector(j);    
+    for (j=0;j<optimizer->GetSize();j++) {
+      float* params = optimizer->GetStateVector(j);    
       
       float fitness = -calcAckley(params);
 
       if(fitness>BEST)
       {
         BEST=fitness;
-        printf("Best=%.5f (iter %d)\n",BEST,i);
-        for(k=0;k<DIM;k++) printf("(%.3lf)",params[k]);
-        printf("\n\n");
+        d_trace("Best=%.5f (iter %d)\n",BEST,i);
+        for(k=0;k<DIM;k++) d_trace("(%.3lf)",params[k]);
+        d_trace("\n\n");
       }
       
-      optimizer->setFitness(j, fitness);
+      optimizer->SetFitness(j, fitness);
     }
   }  
 

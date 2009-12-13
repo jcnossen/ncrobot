@@ -31,7 +31,21 @@
 
 //#include "../Box2D/Examples/TestBed/Tests/TheoJansen.h"
 
+TestFactoryBase* TestFactoryBase::list = 0;
 
+TestFactoryBase::TestFactoryBase()
+{
+	next = list;
+	list = this;
+}
+
+std::vector<TestFactoryBase*> TestFactoryBase::getFactoryList()
+{
+	std::vector<TestFactoryBase*> v;
+	for(TestFactoryBase* p = list; p; p = p->next)
+		v.push_back(p);
+	return v;
+}
 
 void Test::SetupForPSO()
 {
@@ -51,30 +65,6 @@ void Test::SetControlParams(float* v)
 	if(params.empty())
 		params.resize(inputs.size());
 	params=std::vector<float>(v,v+params.size());
-}
-
-void Test::AddMotor(Motor m)
-{
-	m.paramIndex = inputs.size();
-	motors.push_back(m);
-
-	ParamInfo inp;
-	inp.min = -100.0f;
-	inp.max = 100.0f;
-
-	for (int i=0;i<5;i++)
-		inputs.push_back(inp);
-}
-
-void Test::UpdateMotors()
-{
-	for(int i=0;i<motors.size();i++) {
-		b2RevoluteJoint* j = motors[i].joint;
-		float *param = &params[motors[i].paramIndex];
-		float ang = j->GetJointAngle ();
-		float s = param[0] + param[1] * cosf( (param[2] * m_time - param[3]) * 0.1f) + param[4] * ang;
-		motors[i].joint->SetMotorSpeed(s);
-	}
 }
 
 void Test::CreateBaseWorld()
@@ -273,14 +263,6 @@ void Test::Step(TestSettings* settings)
 {
 	float32 timeStep = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
 
-	// Update motors based on time
-	if (settings->optimizing)
-		UpdateMotors();
-	else {
-		if (params.size()>0 && !settings->pause)
-			UpdateMotors();
-	}
-
 	if (settings->pause)
 	{
 		if (settings->singleStep)
@@ -423,3 +405,5 @@ void Test::DrawMouseJoint()
 	glVertex2f(p2.x, p2.y);
 	glEnd();
 }
+
+

@@ -12,7 +12,7 @@
 SimulationManager::SimulationManager()
 {
 	optimizer = 0;
-	testFactory	= 0;
+	testEntry = 0;
 	stopOptimization = false;
 	isOptimizing = false;
 	test = 0;
@@ -82,7 +82,7 @@ void SimulationManager::Optimize()
 		// post items for the simulation threads
 		for(int j=0;j<config.population;j++) {
 			SimulationWorkItem& wi = workItemParams[j];
-			wi.test = testFactory->createFcn(); 
+			wi.test = testEntry->create();
 			wi.owner = this;
 			wi.simTicks = simticks;
 			wi.settings = &optimizeSettings;
@@ -175,11 +175,11 @@ void SimulationManager::InteractiveTick()
 	}
 }
 
-void SimulationManager::ChangeTest( TestFactory *f )
+void SimulationManager::ChangeTest( TestEntry *f )
 {
 	assert(!isOptimizing);
-	testFactory = f;
-	SetTest(testFactory->createFcn());
+	testEntry = f;
+	SetTest(f->create());
 }
 
 std::vector<ParameterRange> SimulationManager::GetRanges()
@@ -202,12 +202,12 @@ std::string SimulationManager::GetInfoString()
 		return "Optimizing....";
 	else
 		return SPrintf("%s. Time:%.2f. Score: %.2f. Tick: %d. Hash: %X", 
-		testFactory->name, test->GetTime(), test->GetScore(), tick, test->CalcHash());
+		testEntry->name, test->GetTime(), test->GetScore(), tick, test->CalcHash());
 }
 
 void SimulationManager::Reset()
 {
-	SetTest(testFactory->createFcn());
+	SetTest(testEntry->create());
 	if (bestRun) {
 		test->SetControlParams(&bestRun->controlState.front());
 

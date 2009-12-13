@@ -51,7 +51,12 @@ namespace
 
 	SimulationConfig simConfig;
 	SimulationManager *simManager;
+
 }
+
+static std::vector<TestEntry> testEntries;
+
+
 
 
 typedef Optimizer* OptimizerCreateFn();
@@ -142,7 +147,7 @@ void SimulationLoop()
 	if (testSelection != testIndex)
 	{
 		testIndex = testSelection;
-		simManager->ChangeTest(&g_testEntries[testIndex]);
+		simManager->ChangeTest(&testEntries[testIndex]);
 
 		viewZoom = 1.0f;
 		viewCenter.Set(0.0f, 20.0f);
@@ -316,8 +321,25 @@ void ShowGraph(int)
 // 	}
 }
 
+void CollectTestEntries() {
+	std::vector<TestFactoryBase*> fl = TestFactoryBase::getFactoryList();
+
+	for(int i=0;i<fl.size();i++) {
+		for (int j=0;j<fl[i]->getNumTests();j++)  {
+			TestEntry e;
+			e.factory = fl[i];
+			e.index = j;
+			e.name = fl[i]->getTestName(j);
+			testEntries.push_back(e);
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
+
+	CollectTestEntries();
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
@@ -343,8 +365,8 @@ int main(int argc, char** argv)
 
 	glui->add_statictext("Tests");
 	GLUI_Listbox* testList = glui->add_listbox("", &testSelection);
-	for(int i=0;g_testEntries[i].createFcn;i++)
-		testList->add_item(i, g_testEntries[i].name);
+	for(int i=0;i<testEntries.size();i++)
+		testList->add_item(i, testEntries[i].name);
 	testList->set_int_val(testSelection);
 
 	glui->add_statictext("Optimizer");
@@ -384,7 +406,7 @@ int main(int argc, char** argv)
 	glutTimerFunc(framePeriod, Timer, 0);
 
 	simManager = new SimulationManager();
-	simManager->ChangeTest(&g_testEntries[testIndex]);
+	simManager->ChangeTest(&testEntries[testIndex]);
 
 	glutMainLoop();
 
