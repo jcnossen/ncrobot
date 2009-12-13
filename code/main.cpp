@@ -26,16 +26,13 @@
 #include "swarm/Swarm.h"
 #include "GAOptimizer.h"
 
-#include "ThreadManager.h"
-#include "Graph.h"
+#include "SimulationManager.h"
 
 namespace
 {
 	int32 testIndex = 0;
 	int32 testSelection = 0;
 	int32 selectedOptimizer = 0;
-	TestEntry* entry;
-	Test* test = 0;
 	TestSettings settings;
 	int32 width = 640;
 	int32 height = 480;
@@ -48,23 +45,12 @@ namespace
 	int tx, ty, tw, th;
 	bool rMouseDown;
 	b2Vec2 lastp;
-	int swarmTicks=20;
-	int optimTime=10; 
-	int32 useTime=0;
-	Graph* graph;
 	int32 showGraph=0;
-#ifdef _DEBUG
-	int numSimThreads=1;
-#else
-	int numSimThreads=4;
-#endif
-	float simLength = 10.0f; // 5 second sim
-	bool playback=false;
-	std::vector<float> curCtlParams;
-	std::vector<ParameterRange> ranges;
 	SwarmConfig swarmConfig;
 	GLUI_Button* optimizeButton;
-	bool quitOptim=false;
+
+	SimulationConfig simConfig;
+	SimulationManager *simManager;
 }
 
 
@@ -76,14 +62,16 @@ struct OptimizerEntry {
 };
 
 Optimizer* CreateSwarm() { 
-	return new Swarm(swarmConfig, ranges); 
+	swarmConfig.popSize= simConfig.population;
+	return new Swarm(swarmConfig, simManager->GetRanges());
 }
+
 Optimizer* CreateGA() { 
 	GAConfig cfg;
 	cfg.crossoverMutationRate = 0.1f;
 	cfg.pointMutationRate = 0.1f;
-	cfg.size = swarmConfig.popSize;
-	return new GAOptimizer(cfg, ranges); 
+	cfg.size = simConfig.population;
+	return new GAOptimizer(cfg, simManager->GetRanges()); 
 }
 //Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
 
@@ -143,20 +131,6 @@ void Timer(int)
 	glutTimerFunc(framePeriod, Timer, 0);
 }
 
-void SetupTest(std::vector<float>* ctlParams=0)
-{
-	delete test;
-	entry = g_testEntries + testIndex;
-	test = entry->createFcn();
-	test->SetupListeners();
-
-	if (ctlParams) {
-		curCtlParams = *ctlParams;
-		test->SetControlParams(&curCtlParams[0]);
-		playback=true;
-	} else playback=false;
-}
-
 
 void SimulationLoop()
 {
@@ -165,35 +139,28 @@ void SimulationLoop()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	settings.hz = settingsHz;
-
-	if (!showGraph && !settings.psoRun) {
-		if (playback && test->GetTime() >= simLength) 
-			SetupTest(&curCtlParams);
-
-		test->SetTextLine(30);
-		test->Step(&settings);
-
-		DrawString(5, 15, SPrintf("%s. Time:%.2f. Score: %.2f", entry->name, test->GetTime(), test->GetScore()).c_str());
-	} else {
-		DrawString(5, 15, "Running optimization...");
-	}
-
-
-	glutSwapBuffers();
-
 	if (testSelection != testIndex)
 	{
 		testIndex = testSelection;
-		SetupTest();
+		simManager->ChangeTest(&g_testEntries[testIndex]);
+
 		viewZoom = 1.0f;
 		viewCenter.Set(0.0f, 20.0f);
 		Resize(width, height);
 	}
+
+	if (!simManager->IsOptimizing()) {
+		simManager->interactiveSettings.hz = settingsHz;
+		simManager->InteractiveTick();
+	}
+	DrawString(5, 15, simManager->GetInfoString().c_str());
+
+	glutSwapBuffers();
 }
 
 void Keyboard(unsigned char key, int x, int y)
 {
+	Test* test = simManager->GetTest();
 	B2_NOT_USED(x);
 	B2_NOT_USED(y);
 
@@ -213,13 +180,6 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'x':
 		viewZoom = b2Max(0.9f * viewZoom, 0.02f);
 		Resize(width, height);
-		break;
-
-		// Press 'r' to reset.
-	case 'r':
-		delete test;
-		b2Assert(b2_byteCount == 0);
-		test = entry->createFcn();
 		break;
 
 	default:
@@ -272,6 +232,8 @@ void KeyboardSpecial(int key, int x, int y)
 
 void Mouse(int32 button, int32 state, int32 x, int32 y)
 {
+	Test* test = simManager->GetTest();
+
 	// Use the mouse to move things around.
 	if (button == GLUT_LEFT_BUTTON)
 	{
@@ -294,14 +256,13 @@ void Mouse(int32 button, int32 state, int32 x, int32 y)
 		}
 
 		if (state == GLUT_UP)
-		{
 			rMouseDown = false;
-		}
 	}
 }
 
 void MouseMotion(int32 x, int32 y)
 {
+	Test* test = simManager->GetTest();
 	b2Vec2 p = ConvertScreenToWorld(x, y);
 	test->MouseMove(p);
 	
@@ -326,161 +287,33 @@ void MouseWheel(int wheel, int direction, int x, int y)
 	Resize(width, height);
 }
 
-void Pause(int)
-{
-	settings.pause = !settings.pause;
-}
-
-void SingleStep(int)
-{
-	settings.pause = 1;
-	settings.singleStep = 1;
-}
-
 void Reset(int)
 {
-	SetupTest();
+	simManager->Reset();
 }
 
-struct TestWorkItemParam
+void RunOptimization(int) 
 {
-	Test* test;
-	float score;
-	int numTicks;
-	int index;
-};
+	if(simManager->IsOptimizing()) {
+		simManager->StopOptimization();
 
-void RunTest_WorkItem(void* d) {
-	TestWorkItemParam* p = (TestWorkItemParam*)d;
-//	printf("j=%d; %p\n",p->index,p);
-	
-	// run simulation, and feed scores back into swarm
-	p->test->SetupForPSO();
-	for(int u=0;u<p->numTicks;u++)
-		p->test->Step(&settings);
-	
-	p->score = p->test->GetScore();
+		optimizeButton->set_name("Run optimization");
+	}
+	else {
+		Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
+		simManager->SetOptimizer(optimizer);
+		simManager->StartOptimization(simConfig);
+		optimizeButton->set_name("Stop optimization");
+	}
 }
 
-
-int OptimizationThreadMain (void *param) {
-	float bestScore=-100000.0f;
-	std::vector<float> best;
-	std::vector<ParamInfo> inputs = test->GetParamInfo();
-
-	Uint32 startTicks = SDL_GetTicks();
-	int simticks = settings.hz * simLength;
-
-	d_trace("Starting optimization with %d threads\n", numSimThreads);
-	
-	quitOptim = false;
-	settings.psoRun = true;
-
-	ranges.resize(inputs.size());
-	for(int i=0;i<ranges.size();i++) {
-		ranges[i].min=inputs[i].min;
-		ranges[i].max=inputs[i].max;
-	}
-
-	Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
-	int numInstances = optimizer->getSize();
-
-	bool useThreads=true;
-
-	TestEntry& entry = g_testEntries[testIndex];
-
-	if (graph)
-		graph->setup(ranges.size());//ranges.size() * optimizer->getSize());
-
-	int i = 0;
-	while (!quitOptim) {
-		float t = (SDL_GetTicks()-startTicks) * 0.001f;
-
-	//	graph->startTick();
-
-		if (useTime) {
-			if (t > optimTime)
-				break;
-		} else if (i == swarmTicks)
-			break;
-
-		d_trace("Swarm update tick: %d. T (minutes)=%f. ", i, t/60.0f);
-
-		optimizer->update();
-		ThreadManager threadManager;
-		std::vector<TestWorkItemParam> workItemParams(optimizer->getSize());
-
-		// post items for the simulation threads
-		for(int j=0;j<numInstances;j++) {
-//			Particle& sp = sw.swarm[j];
-			Test* t = entry.createFcn();
-			
-			float* stateVec = optimizer->getStateVector(j);
-			t->SetControlParams(stateVec);
-			workItemParams[j].test = t;
-			workItemParams[j].numTicks = simticks;
-			workItemParams[j].index = j;
-
-			if (useThreads) {
-				threadManager.AddWorkItem(RunTest_WorkItem, &workItemParams[j]);
-			} else
-				RunTest_WorkItem(&workItemParams[j]);
-		}
-
-		if (useThreads) {
-			threadManager.Start(numSimThreads);
-			threadManager.WaitForAllDone();
-		}
-
-		// Update best score
-		for(int j=0;j<numInstances;j++) {
-			delete workItemParams[j].test;
-			workItemParams[j].test=0;
-			float fitness = workItemParams[j].score;
-			optimizer->setFitness(j, fitness);
-			if (fitness > bestScore) { 
-				bestScore=fitness;
-				float* sv = optimizer->getStateVector(j);
-				best=std::vector<float>(sv, sv+ranges.size());
-				if (graph) {
-					graph->startTick();
-					graph->setData(0, sv, ranges.size(), fitness);
-				}
-			}
-			//graph->setData(j * ranges.size(), optimizer->getStateVector(j), ranges.size(), fitness);
-		}
-
-		d_trace("BestScore: %f\n", bestScore);
-		i++;
-	}
-
-	SetupTest(&best);
-
-	delete optimizer;
-
-	for(int a=0;a<best.size();a++) {
-		d_trace("Param[%d]: %f\n", a,best[a]);
-	}
-
-	settings.psoRun = false;
-	return 0;
-}
-
-void RunSwarm(int)
-{
-	if (!settings.psoRun)  {
-		OptimizationThreadMain(0);
-//		SDL_CreateThread(OptimizationThreadMain, 0);
-	} else
-		quitOptim = true;
-}
 
 void ShowGraph(int)
 {
-	if (!graph) {
-		graph = new Graph();
-		glutSetWindow(mainWindow);
-	}
+// 	if (!graph) {
+// 		graph = new Graph();
+// 		glutSetWindow(mainWindow);
+// 	}
 }
 
 int main(int argc, char** argv)
@@ -527,36 +360,20 @@ int main(int argc, char** argv)
 	graphTypeList->set_int_val(1);//swarmConfig.graphType);
 	glui->add_separator();
 
+	glui->add_checkbox("Playback best", &settings.motorCtl);
 
-/*	GLUI_Spinner* iterationSpinner =
-		glui->add_spinner("Iterations", GLUI_SPINNER_INT, &settings.iterationCount);
-	iterationSpinner->set_int_limits(1, 100);
-
-	GLUI_Spinner* hertzSpinner =
-		glui->add_spinner("Hertz", GLUI_SPINNER_FLOAT, &settingsHz);
-
-	hertzSpinner->set_float_limits(5.0f, 200.0f);
-*/
-
-// 	glui->add_checkbox("Position Correction", &settings.enablePositionCorrection);
-// 	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
-// 	glui->add_checkbox("Time of Impact", &settings.enableTOI);
-
-	glui->add_spinner("Swarm ticks", GLUI_SPINNER_INT, &swarmTicks);
-	glui->add_spinner("Swarm size", GLUI_SPINNER_INT, &swarmConfig.popSize);
-	glui->add_checkbox("Motor control", &settings.motorCtl);
-	glui->add_spinner("Simulation Threads", GLUI_SPINNER_INT, &numSimThreads);
-	glui->add_spinner("Robot sim length", GLUI_SPINNER_FLOAT, &simLength);
-	glui->add_checkbox("Stop at optim time", &useTime); 
-	glui->add_spinner("Max optimize time (s)", GLUI_SPINNER_INT, &optimTime);
-
-	glui->add_separator();
+	GLUI_Panel* optimPanel = glui->add_panel("Optimization Settings");
+	glui->add_spinner_to_panel(optimPanel, "Max Ticks", GLUI_SPINNER_INT, &simConfig.maxTicks);
+	glui->add_spinner_to_panel(optimPanel, "Max Time (s)", GLUI_SPINNER_INT, &simConfig.maxTime);
+	glui->add_spinner_to_panel(optimPanel, "Population Size", GLUI_SPINNER_INT, &simConfig.population);
+	glui->add_spinner_to_panel(optimPanel, "CPU threads", GLUI_SPINNER_INT, &simConfig.numSimThreads);
+	glui->add_spinner_to_panel(optimPanel, "Sim duration", GLUI_SPINNER_FLOAT, &simConfig.simLength);
 
 	GLUI_Panel* drawPanel =	glui->add_panel("Draw");
 	glui->add_checkbox_to_panel(drawPanel, "Shapes", &settings.drawShapes);
 	glui->add_checkbox_to_panel(drawPanel, "Joints", &settings.drawJoints);
 
-	optimizeButton = glui->add_button("Run optimization",0, RunSwarm);
+	optimizeButton = glui->add_button("Run optimization",0, RunOptimization);
 	glui->add_button("Reset", 0, Reset);
 	glui->add_checkbox("Graph", &showGraph);
 
@@ -566,16 +383,12 @@ int main(int argc, char** argv)
 	// Use a timer to control the frame rate.
 	glutTimerFunc(framePeriod, Timer, 0);
 
-	SetupTest();
-
+	simManager = new SimulationManager();
+	simManager->ChangeTest(&g_testEntries[testIndex]);
 
 	glutMainLoop();
 
-	if (graph)
-		delete graph;
-
-	if (test)
-		delete test;
+	SafeDelete(simManager);
 
 	return 0;
 }

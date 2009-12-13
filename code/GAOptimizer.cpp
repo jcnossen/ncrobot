@@ -23,7 +23,7 @@ static bool GenomeComparer(GAGenome* a, GAGenome* b) {
 	return a->fitness > b->fitness;
 }
 
-void GAOptimizer::update()
+void GAOptimizer::Update()
 {
 	// select the better half of the population, 
 	std::vector<GAGenome*> sortedList;
@@ -79,12 +79,12 @@ GAGenome* GAOptimizer::mutatedCopy( const std::vector<GAGenome*>& genomes, int p
 }
 
 
-void GAOptimizer::setFitness( int particle, float fitness )
+void GAOptimizer::SetFitness( int particle, float fitness )
 {
 	genomes[particle]->fitness = fitness;
 }
 
-float* GAOptimizer::getStateVector( int particle )
+float* GAOptimizer::GetStateVector( int particle )
 {
 	return &genomes[particle]->genes.front();
 }

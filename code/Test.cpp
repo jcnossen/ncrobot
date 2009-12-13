@@ -50,7 +50,7 @@ void Test::SetControlParams(float* v)
 {
 	if(params.empty())
 		params.resize(inputs.size());
-	params.assign(v,v+params.size());
+	params=std::vector<float>(v,v+params.size());
 }
 
 void Test::AddMotor(Motor m)
@@ -62,7 +62,7 @@ void Test::AddMotor(Motor m)
 	inp.min = -100.0f;
 	inp.max = 100.0f;
 
-	for (int i=0;i<4;i++)
+	for (int i=0;i<5;i++)
 		inputs.push_back(inp);
 }
 
@@ -71,16 +71,8 @@ void Test::UpdateMotors()
 	for(int i=0;i<motors.size();i++) {
 		b2RevoluteJoint* j = motors[i].joint;
 		float *param = &params[motors[i].paramIndex];
-		//float s = params[f] + params[f+1] * cosf(params[f+2] * m_time);
 		float ang = j->GetJointAngle ();
-// 		float angSpeed = j->GetJointSpeed();
-// 		float angParent = j->GetBody2()->GetAngle();
-		// a + b * ang + c * cos(d * t - e) + f * angParent + g * angSpeed + h* ang^2
-		//float s = param[0] + param[1] * ang + param[2] * cosf(param[3] * m_time - param[4]) + param[5] * angParent + param[6] * angSpeed + param[7] * (ang*ang);
-
-//		float ad = ang -  param[2] * cosf(param[3] * m_time - param[4]);
-//		float s = param[0] + param[1] * ad;
-		float s = param[0] + param[1] * cosf( (param[2] * m_time - param[3]) * 0.01f);
+		float s = param[0] + param[1] * cosf( (param[2] * m_time - param[3]) * 0.1f) + param[4] * ang;
 		motors[i].joint->SetMotorSpeed(s);
 	}
 }
@@ -188,6 +180,8 @@ Test::Test()
 	m_mouseJoint = NULL;
 	m_pointCount = 0;
 	m_time=0.0f;
+
+	CreateBaseWorld();
 }
 
 void Test::SetupListeners()
@@ -280,15 +274,11 @@ void Test::Step(TestSettings* settings)
 	float32 timeStep = settings->hz > 0.0f ? 1.0f / settings->hz : float32(0.0f);
 
 	// Update motors based on time
-	if (settings->psoRun)
+	if (settings->optimizing)
 		UpdateMotors();
 	else {
-		if (settings->motorCtl && params.size()>0)
+		if (params.size()>0 && !settings->pause)
 			UpdateMotors();
-		else {
-			for(int i=0;i<motors.size();i++)
-				motors[i].joint->EnableMotor(false);
-		}
 	}
 
 	if (settings->pause)
@@ -299,8 +289,7 @@ void Test::Step(TestSettings* settings)
 			timeStep = 0.0f;
 
 		if (settings->drawing()) 
-			DrawString(5, m_textLine, "****PAUSED****");
-		m_textLine += 15;
+			DrawString(5, 30, "****PAUSED****");
 	}
 
 	uint32 flags = 0;
@@ -320,111 +309,31 @@ void Test::Step(TestSettings* settings)
 	m_pointCount = 0;
 
 	m_world->Step(timeStep, settings->iterationCount);
-
 	m_world->Validate();
 
-	if (settings->drawStats && settings->drawing())
-	{
-		DrawString(5, m_textLine, "proxies(max) = %d(%d), pairs(max) = %d(%d)",
-			m_world->GetProxyCount(), b2_maxProxies,
-			m_world->GetPairCount(), b2_maxPairs);
-		m_textLine += 15;
-
-		DrawString(5, m_textLine, "bodies/contacts/joints = %d/%d/%d",
-			m_world->GetBodyCount(), m_world->GetContactCount(), m_world->GetJointCount());
-		m_textLine += 15;
-
-		DrawString(5, m_textLine, "heap bytes = %d", b2_byteCount);
-		m_textLine += 15;
-	}
-
 	if (m_mouseJoint && settings->drawing())
-	{
-		b2Body* body = m_mouseJoint->GetBody2();
-		b2Vec2 p1 = body->GetWorldPoint(m_mouseJoint->m_localAnchor);
-		b2Vec2 p2 = m_mouseJoint->m_target;
-
-		glPointSize(4.0f);
-		glColor3f(0.0f, 1.0f, 0.0f);
-		glBegin(GL_POINTS);
-		glVertex2f(p1.x, p1.y);
-		glVertex2f(p2.x, p2.y);
-		glEnd();
-		glPointSize(1.0f);
-
-		glColor3f(0.8f, 0.8f, 0.8f);
-		glBegin(GL_LINES);
-		glVertex2f(p1.x, p1.y);
-		glVertex2f(p2.x, p2.y);
-		glEnd();
-	}
+		DrawMouseJoint();
 
 	if (settings->drawContactPoints && settings->drawing())
-	{
-		//const float32 k_impulseScale = 0.1f;
-		const float32 k_axisScale = 0.3f;
+		DrawContactPoints(settings);
 
-		for (int32 i = 0; i < m_pointCount; ++i)
-		{
-			ContactPoint* point = m_points + i;
-
-			if (point->state == 0)
-			{
-				// Add
-				DrawPoint(point->position, 10.0f, b2Color(0.3f, 0.95f, 0.3f));
-			}
-			else if (point->state == 1)
-			{
-				// Persist
-				DrawPoint(point->position, 5.0f, b2Color(0.3f, 0.3f, 0.95f));
-			}
-			else
-			{
-				// Remove
-				DrawPoint(point->position, 10.0f, b2Color(0.95f, 0.3f, 0.3f));
-			}
-
-			if (settings->drawContactNormals == 1)
-			{
-				b2Vec2 p1 = point->position;
-				b2Vec2 p2 = p1 + k_axisScale * point->normal;
-				DrawSegment(p1, p2, b2Color(0.4f, 0.9f, 0.4f));
-			}
-			else if (settings->drawContactForces == 1)
-			{
-				//b2Vec2 p1 = point->position;
-				//b2Vec2 p2 = p1 + k_forceScale * point->normalForce * point->normal;
-				//DrawSegment(p1, p2, b2Color(0.9f, 0.9f, 0.3f));
-			}
-
-			if (settings->drawFrictionForces == 1)
-			{
-				//b2Vec2 tangent = b2Cross(point->normal, 1.0f);
-				//b2Vec2 p1 = point->position;
-				//b2Vec2 p2 = p1 + k_forceScale * point->tangentForce * tangent;
-				//DrawSegment(p1, p2, b2Color(0.9f, 0.9f, 0.3f));
-			}
-		}
-	}
 	m_time += timeStep;
-
 }
 
-
-static unsigned int CalcStrHash(char* str, unsigned int len)
+template<typename T>
+static void CalcStructHash(T& o, uint &hash)
 {
-	unsigned int b    = 378551;
-	unsigned int a    = 63689;
-	unsigned int hash = 0;
-	unsigned int i    = 0;
+	char *str = (char*)&o;
+	int len = sizeof(T);
 
-	for(i = 0; i < len; str++, i++)
+	unsigned int b = 378551;
+	unsigned int a = 63689;
+
+	for(uint i = 0; i < len; str++, i++)
 	{
 		hash = hash * a + (*str);
 		a    = a * b;
 	}
-
-	return hash;
 }
 
 // Calculate a hash based on the body state
@@ -434,15 +343,83 @@ uint Test::CalcHash()
 
 	for (b2Body* b =  m_world->GetBodyList(); b;b=b->GetNext()) {
 		b2XForm xf = b->GetXForm();
-		hash ^= CalcStrHash((char*)&xf, sizeof(xf));
+		CalcStructHash(xf, hash);
 
 		float32 av = b->GetAngularVelocity();
 		b2Vec2 v = b->GetLinearVelocity();
 
-		hash ^= CalcStrHash(&av, sizeof(av));
-		hash ^= CalcStrHash(&v, sizeof(v));
+		CalcStructHash(av, hash);
+		CalcStructHash(v, hash);
 	}
 
 	return hash;
 }
 
+void Test::DrawContactPoints( TestSettings* settings )
+{
+	//const float32 k_impulseScale = 0.1f;
+	const float32 k_axisScale = 0.3f;
+
+	for (int32 i = 0; i < m_pointCount; ++i)
+	{
+		ContactPoint* point = m_points + i;
+
+		if (point->state == 0)
+		{
+			// Add
+			DrawPoint(point->position, 10.0f, b2Color(0.3f, 0.95f, 0.3f));
+		}
+		else if (point->state == 1)
+		{
+			// Persist
+			DrawPoint(point->position, 5.0f, b2Color(0.3f, 0.3f, 0.95f));
+		}
+		else
+		{
+			// Remove
+			DrawPoint(point->position, 10.0f, b2Color(0.95f, 0.3f, 0.3f));
+		}
+
+		if (settings->drawContactNormals == 1)
+		{
+			b2Vec2 p1 = point->position;
+			b2Vec2 p2 = p1 + k_axisScale * point->normal;
+			DrawSegment(p1, p2, b2Color(0.4f, 0.9f, 0.4f));
+		}
+		else if (settings->drawContactForces == 1)
+		{
+			//b2Vec2 p1 = point->position;
+			//b2Vec2 p2 = p1 + k_forceScale * point->normalForce * point->normal;
+			//DrawSegment(p1, p2, b2Color(0.9f, 0.9f, 0.3f));
+		}
+
+		if (settings->drawFrictionForces == 1)
+		{
+			//b2Vec2 tangent = b2Cross(point->normal, 1.0f);
+			//b2Vec2 p1 = point->position;
+			//b2Vec2 p2 = p1 + k_forceScale * point->tangentForce * tangent;
+			//DrawSegment(p1, p2, b2Color(0.9f, 0.9f, 0.3f));
+		}
+	}
+}
+
+void Test::DrawMouseJoint()
+{
+	b2Body* body = m_mouseJoint->GetBody2();
+	b2Vec2 p1 = body->GetWorldPoint(m_mouseJoint->m_localAnchor);
+	b2Vec2 p2 = m_mouseJoint->m_target;
+
+	glPointSize(4.0f);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(p1.x, p1.y);
+	glVertex2f(p2.x, p2.y);
+	glEnd();
+	glPointSize(1.0f);
+
+	glColor3f(0.8f, 0.8f, 0.8f);
+	glBegin(GL_LINES);
+	glVertex2f(p1.x, p1.y);
+	glVertex2f(p2.x, p2.y);
+	glEnd();
+}

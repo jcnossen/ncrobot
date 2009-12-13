@@ -49,7 +49,7 @@ struct TestSettings
 		enableTOI(1),
 		pause(0),
 		singleStep(0),
-		psoRun(false),
+		optimizing(false),
 		motorCtl(1)
 		{}
 
@@ -72,19 +72,19 @@ struct TestSettings
 	int32 enableTOI;
 	int32 pause;
 	int32 singleStep;
-	bool psoRun; // is PSO running, in this case do not draw anything
+	bool optimizing; // is PSO running, in this case do not draw anything
 	int32 motorCtl;
 
-	bool drawing() { return psoRun==false; }
+	bool drawing() { return optimizing==false; }
 };
 
-struct TestEntry
+struct TestFactory
 {
 	const char *name;
 	TestCreateFcn *createFcn;
 };
 
-extern TestEntry g_testEntries[];
+extern TestFactory g_testEntries[];
 // This is called when a joint in the world is implicitly destroyed
 // because an attached body is destroyed. This gives us a chance to
 // nullify the mouse joint.
@@ -151,6 +151,9 @@ public:
 
 	void SetTextLine(int32 line) { m_textLine = line; }
 	virtual void Step(TestSettings* settings);
+
+	void DrawMouseJoint();
+	void DrawContactPoints( TestSettings* settings );
 	virtual void Keyboard(unsigned char key) { B2_NOT_USED(key); }
 	void MouseDown(const b2Vec2& p);
 	void MouseUp();
@@ -192,8 +195,6 @@ protected:
 	b2World* m_world;
 	b2MouseJoint* m_mouseJoint;
 	float m_time;
-
-	
 
 	std::vector<float> params;
 

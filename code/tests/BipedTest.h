@@ -27,8 +27,6 @@ public:
 
 	BipedTest()
 	{
-		CreateBaseWorld();
-
 		m_biped = new Biped(m_world, b2Vec2(0.0f, 4.0f));
 
 		std::vector<b2RevoluteJoint*> joints =  m_biped->getJoints();

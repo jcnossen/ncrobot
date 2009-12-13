@@ -14,9 +14,9 @@ class Optimizer
 public:
 	virtual ~Optimizer() {}
 
-	virtual void update() = 0;
-	virtual void setFitness(int particle, float fitness) = 0;
-	virtual float* getStateVector(int particle) = 0;
-	virtual int getSize() =0 ;
+	virtual void Update() = 0;
+	virtual void SetFitness(int particle, float fitness) = 0;
+	virtual float* GetStateVector(int particle) = 0;
+	virtual int GetSize() =0 ;
 };
 

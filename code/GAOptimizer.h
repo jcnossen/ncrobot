@@ -25,10 +25,10 @@ public:
 	GAOptimizer(GAConfig& cfg, std::vector<ParameterRange> ranges);
 	~GAOptimizer();
 
-	void update();
-	void setFitness(int particle, float fitness);
-	float* getStateVector(int particle);
-	int getSize() { return config.size; }
+	void Update();
+	void SetFitness(int particle, float fitness);
+	float* GetStateVector(int particle);
+	int GetSize() { return config.size; }
 private:
 	std::vector<ParameterRange> ranges;
 	typedef std::vector<GAGenome*> GenomeList;

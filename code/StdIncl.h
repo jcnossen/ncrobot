@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 #include <vector>
 #include <algorithm>
 #include <cstdio>
@@ -93,6 +94,19 @@ public:
 #endif
 
 
+template<typename T> void SafeDelete(T& item) {
+	if (item!=0) {
+		delete item;
+		item = 0;
+	}
+}
+
+template<typename T> void SafeDeleteArray(T& item) {
+	if (item!=0) {
+		delete[] item;
+		item = 0;
+	}
+}
 
 // Delete all items in a container of pointers
 template<typename T> void DeleteAll(T& items) {

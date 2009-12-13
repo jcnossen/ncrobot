@@ -46,6 +46,8 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				FloatingPointModel="1"
+				FloatingPointExceptions="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -121,6 +123,8 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;FREEGLUT_EXPORTS;FREEGLUT_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				FloatingPointModel="1"
+				FloatingPointExceptions="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -304,6 +308,14 @@
 		</File>
 		<File
 			RelativePath="..\Render.h"
+			>
+		</File>
+		<File
+			RelativePath="..\SimulationManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\SimulationManager.h"
 			>
 		</File>
 		<File

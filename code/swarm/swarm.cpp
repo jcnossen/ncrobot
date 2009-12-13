@@ -156,7 +156,7 @@ Swarm::Swarm(SwarmConfig cfg, std::vector<ParameterRange> ranges)
 
 
 //This function assumes the new fitnessvalues have just been updated
-void Swarm::update()
+void Swarm::Update()
 {
   int i,j,k;
 

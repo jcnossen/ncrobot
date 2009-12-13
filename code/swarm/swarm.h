@@ -45,10 +45,10 @@ public:
   void setupGraph(int graphType, float randomParam);
   
 	// Optimizer implementation
-	void update();
-	void setFitness(int particle, float fitness) { swarm[particle].fitness = fitness; }
-	float* getStateVector(int particle) { return &swarm[particle].position[0]; }
-	int getSize() { return swarm.size(); }
+	void Update();
+	void SetFitness(int particle, float fitness) { swarm[particle].fitness = fitness; }
+	float* GetStateVector(int particle) { return &swarm[particle].position[0]; }
+	int GetSize() { return swarm.size(); }
 
 	static int numGraphTypes();
 	static const char* graphTypeNames[];

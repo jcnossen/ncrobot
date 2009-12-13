@@ -33,7 +33,7 @@ Test* CreatePSOWalker10()
 	return new Walker(10, false);
 }
 
-TestEntry g_testEntries[] =
+TestFactory g_testEntries[] =
 {
 	{"Simple Car", SimpleCarTest::Create },
 	{"1-lp walker (knees)", CreatePSOWalker1},
