@@ -33,7 +33,6 @@ public:
 
 	void CreateLeg(b2Vec2 start, bool knee, bool limits);
 	void CreateLegs(int n, bool knees, bool limits);
-	b2Body* CreateLegPiece(b2Body* parent, b2Vec2 pos, float len, float angle);
 
 	Walker(float w);
 

@@ -343,7 +343,8 @@ void CollectTestEntries() {
 	}
 }
 
-void PrintHelp() {
+void PrintHelp()
+{
 	printf("ncrobot <options>\n"
 		"-cl\tCommand line only, no UI\n"
 		"-ps <value>\tSet population size\n"
@@ -362,7 +363,7 @@ bool ParseCmdLine(int argc, char **argv) {
 
 	for(int a=1;a<argc;a++) {
 		if (!STRCASECMP(argv[a], "-test") && a<argc-1) 
-			testIndex = atoi(argv[++a]);
+			testSelection = testIndex = atoi(argv[++a]);
 		else if (!STRCASECMP(argv[a], "-cl"))
 			cmdLineRun=true;
 		else if (!STRCASECMP(argv[a], "-ps") && a<argc-1) 
