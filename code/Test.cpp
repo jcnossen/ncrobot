@@ -49,10 +49,10 @@ std::vector<TestFactoryBase*> TestFactoryBase::getFactoryList()
 
 void Test::SetupForPSO()
 {
-	m_world->SetDebugDraw(0);
-	m_world->SetDestructionListener(0);
-	m_world->SetBoundaryListener(0);
-	m_world->SetContactFilter(0);
+	world->SetDebugDraw(0);
+	world->SetDestructionListener(0);
+	world->SetBoundaryListener(0);
+	world->SetContactFilter(0);
 }
 
 std::vector<ParamInfo> Test::GetParamInfo()
@@ -75,9 +75,10 @@ void Test::CreateBaseWorld()
 	sd.friction = 1.0f;
 
 	b2BodyDef bd;
-	bd.position.Set(0.0f, -10.0f);
-	b2Body* ground = m_world->CreateBody(&bd);
+	bd.position.y=-10.0f;
+	b2Body* ground = world->CreateBody(&bd);
 	ground->CreateShape(&sd);
+	mainGroundShape = ground->GetShapeList();
 
 	sd.SetAsBox(0.5f, 5.0f, b2Vec2(-e, 15.0f), 0.0f);
 	ground->CreateShape(&sd);
@@ -90,9 +91,9 @@ void Test::CreateBaseWorld()
 
 void DestructionListener::SayGoodbye(b2Joint* joint)
 {
-	if (test->m_mouseJoint == joint)
+	if (test->mouseJoint == joint)
 	{
-		test->m_mouseJoint = NULL;
+		test->mouseJoint = NULL;
 	}
 	else
 	{
@@ -106,12 +107,12 @@ void BoundaryListener::Violation(b2Body* body)
 
 void ContactListener::Add(const b2ContactPoint* point)
 {
-	if (test->m_pointCount == k_maxContactPoints)
+	if (test->contactPointCount == k_maxContactPoints)
 	{
 		return;
 	}
 
-	ContactPoint* cp = test->m_points + test->m_pointCount;
+	ContactPoint* cp = test->contactPoints + test->contactPointCount;
 	cp->shape1 = point->shape1;
 	cp->shape2 = point->shape2;
 	cp->position = point->position;
@@ -119,17 +120,17 @@ void ContactListener::Add(const b2ContactPoint* point)
 	cp->id = point->id;
 	cp->state = e_contactAdded;
 
-	++test->m_pointCount;
+	++test->contactPointCount;
 }
 
 void ContactListener::Persist(const b2ContactPoint* point)
 {
-	if (test->m_pointCount == k_maxContactPoints)
+	if (test->contactPointCount == k_maxContactPoints)
 	{
 		return;
 	}
 
-	ContactPoint* cp = test->m_points + test->m_pointCount;
+	ContactPoint* cp = test->contactPoints + test->contactPointCount;
 	cp->shape1 = point->shape1;
 	cp->shape2 = point->shape2;
 	cp->position = point->position;
@@ -137,17 +138,17 @@ void ContactListener::Persist(const b2ContactPoint* point)
 	cp->id = point->id;
 	cp->state = e_contactPersisted;
 
-	++test->m_pointCount;
+	++test->contactPointCount;
 }
 
 void ContactListener::Remove(const b2ContactPoint* point)
 {
-	if (test->m_pointCount == k_maxContactPoints)
+	if (test->contactPointCount == k_maxContactPoints)
 	{
 		return;
 	}
 
-	ContactPoint* cp = test->m_points + test->m_pointCount;
+	ContactPoint* cp = test->contactPoints + test->contactPointCount;
 	cp->shape1 = point->shape1;
 	cp->shape2 = point->shape2;
 	cp->position = point->position;
@@ -155,46 +156,46 @@ void ContactListener::Remove(const b2ContactPoint* point)
 	cp->id = point->id;
 	cp->state = e_contactRemoved;
 
-	++test->m_pointCount;
+	++test->contactPointCount;
 }
 
 Test::Test()
 {
-	m_worldAABB.lowerBound.Set(-2000.0f, -1000.0f);
-	m_worldAABB.upperBound.Set(2000.0f, 2000.0f);
+	worldAABB.lowerBound.Set(-2000.0f, -1000.0f);
+	worldAABB.upperBound.Set(2000.0f, 2000.0f);
 	b2Vec2 gravity;
-	gravity.Set(0.0f, -80.0f);
-	bool doSleep = true;
-	m_world = new b2World(m_worldAABB, gravity, doSleep);
-	m_textLine = 30;
-	m_mouseJoint = NULL;
-	m_pointCount = 0;
-	m_time=0.0f;
+	gravity.Set(0.0f, -40.0f);
+	bool doSleep = false;
+	world = new b2World(worldAABB, gravity, doSleep);
+	textLine = 30;
+	mouseJoint = NULL;
+	contactPointCount = 0;
+	time=0.0f;
 
 	CreateBaseWorld();
 }
 
 void Test::SetupListeners()
 {
-	m_destructionListener.test = this;
-	m_boundaryListener.test = this;
-	m_contactListener.test = this;
-	m_world->SetDestructionListener(&m_destructionListener);
-	m_world->SetBoundaryListener(&m_boundaryListener);
-	m_world->SetContactListener(&m_contactListener);
-	m_world->SetDebugDraw(&m_debugDraw);
+	destructionListener.test = this;
+	boundaryListener.test = this;
+//	contactListener.test = this;
+	world->SetDestructionListener(&destructionListener);
+	world->SetBoundaryListener(&boundaryListener);
+//	world->SetContactListener(&contactListener);
+	world->SetDebugDraw(&debugDraw);
 }
 
 Test::~Test()
 {
 	// By deleting the world, we delete the bomb, mouse joint, etc.
-	delete m_world;
-	m_world = NULL;
+	delete world;
+	world = NULL;
 }
 
 void Test::MouseDown(const b2Vec2& p)
 {
-	if (m_mouseJoint != NULL)
+	if (mouseJoint != NULL)
 	{
 		return;
 	}
@@ -209,7 +210,7 @@ void Test::MouseDown(const b2Vec2& p)
 	// Query the world for overlapping shapes.
 	const int32 k_maxCount = 10;
 	b2Shape* shapes[k_maxCount];
-	int32 count = m_world->Query(aabb, shapes, k_maxCount);
+	int32 count = world->Query(aabb, shapes, k_maxCount);
 	b2Body* body = NULL;
 	for (int32 i = 0; i < count; ++i)
 	{
@@ -228,7 +229,7 @@ void Test::MouseDown(const b2Vec2& p)
 	if (body)
 	{
 		b2MouseJointDef md;
-		md.body1 = m_world->GetGroundBody();
+		md.body1 = world->GetGroundBody();
 		md.body2 = body;
 		md.target = p;
 #ifdef TARGET_FLOAT32_IS_FIXED
@@ -237,25 +238,25 @@ void Test::MouseDown(const b2Vec2& p)
 #else
 		md.maxForce = 1000.0f * body->GetMass();
 #endif
-		m_mouseJoint = (b2MouseJoint*)m_world->CreateJoint(&md);
+		mouseJoint = (b2MouseJoint*)world->CreateJoint(&md);
 		body->WakeUp();
 	}
 }
 
 void Test::MouseUp()
 {
-	if (m_mouseJoint)
+	if (mouseJoint)
 	{
-		m_world->DestroyJoint(m_mouseJoint);
-		m_mouseJoint = NULL;
+		world->DestroyJoint(mouseJoint);
+		mouseJoint = NULL;
 	}
 }
 
 void Test::MouseMove(const b2Vec2& p)
 {
-	if (m_mouseJoint)
+	if (mouseJoint)
 	{
-		m_mouseJoint->SetTarget(p);
+		mouseJoint->SetTarget(p);
 	}
 }
 
@@ -282,24 +283,24 @@ void Test::Step(TestSettings* settings)
 	flags += settings->drawOBBs				* b2DebugDraw::e_obbBit;
 	flags += settings->drawPairs			* b2DebugDraw::e_pairBit;
 	flags += settings->drawCOMs				* b2DebugDraw::e_centerOfMassBit;
-	m_debugDraw.SetFlags(flags);
+	debugDraw.SetFlags(flags);
 
-	m_world->SetWarmStarting(settings->enableWarmStarting > 0);
-	m_world->SetPositionCorrection(settings->enablePositionCorrection > 0);
-	m_world->SetContinuousPhysics(settings->enableTOI > 0);
+	world->SetWarmStarting(settings->enableWarmStarting > 0);
+	world->SetPositionCorrection(settings->enablePositionCorrection > 0);
+	world->SetContinuousPhysics(settings->enableTOI > 0);
 
-	m_pointCount = 0;
+	contactPointCount = 0;
 
-	m_world->Step(timeStep, settings->iterationCount);
-	m_world->Validate();
+	world->Step(timeStep, settings->iterationCount);
+	world->Validate();
 
-	if (m_mouseJoint && settings->drawing())
+	if (mouseJoint && settings->drawing())
 		DrawMouseJoint();
 
 	if (settings->drawContactPoints && settings->drawing())
 		DrawContactPoints(settings);
 
-	m_time += timeStep;
+	time += timeStep;
 }
 
 template<typename T>
@@ -323,7 +324,7 @@ uint Test::CalcHash()
 {
 	uint hash = 0;
 
-	for (b2Body* b =  m_world->GetBodyList(); b;b=b->GetNext()) {
+	for (b2Body* b =  world->GetBodyList(); b;b=b->GetNext()) {
 		b2XForm xf = b->GetXForm();
 		CalcStructHash(xf, hash);
 
@@ -342,9 +343,9 @@ void Test::DrawContactPoints( TestSettings* settings )
 	//const float32 k_impulseScale = 0.1f;
 	const float32 k_axisScale = 0.3f;
 
-	for (int32 i = 0; i < m_pointCount; ++i)
+	for (int32 i = 0; i < contactPointCount; ++i)
 	{
-		ContactPoint* point = m_points + i;
+		ContactPoint* point = contactPoints + i;
 
 		if (point->state == 0)
 		{
@@ -387,9 +388,9 @@ void Test::DrawContactPoints( TestSettings* settings )
 
 void Test::DrawMouseJoint()
 {
-	b2Body* body = m_mouseJoint->GetBody2();
-	b2Vec2 p1 = body->GetWorldPoint(m_mouseJoint->m_localAnchor);
-	b2Vec2 p2 = m_mouseJoint->m_target;
+	b2Body* body = mouseJoint->GetBody2();
+	b2Vec2 p1 = body->GetWorldPoint(mouseJoint->m_localAnchor);
+	b2Vec2 p2 = mouseJoint->m_target;
 
 	glPointSize(4.0f);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -406,4 +407,17 @@ void Test::DrawMouseJoint()
 	glEnd();
 }
 
+bool Test::IsBodyTouching( b2Body *a, b2Body *b )
+{
+	for(b2Shape* sA = a->GetShapeList(); sA; sA=sA->GetNext())
+		for(b2Shape* sB=b->GetShapeList(); sB;sB=sB->GetNext())
+			if (IsShapeTouching(sA,sB)) return true;
+
+	return false;
+}
+
+bool Test::IsShapeTouching( b2Shape* a, b2Shape *b )
+{
+	return false;
+}
 

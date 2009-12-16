@@ -1,20 +1,4 @@
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <queue>
-#include <deque>
-#include <stack>
-#include <set>
-#include <map>
-#include <cstdlib>
-#include <cstdio>
-#include <cctype>
-#include <cmath>
-#include <list>
-#include <numeric>
-#include <algorithm>
-
+#include "../StdIncl.h"
 #include "swarm.h"
 using namespace std;
 

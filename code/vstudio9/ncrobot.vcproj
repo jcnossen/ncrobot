@@ -41,14 +41,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include;..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				FloatingPointModel="1"
 				FloatingPointExceptions="true"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdIncl.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -119,13 +120,14 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include"
+				AdditionalIncludeDirectories="&quot;..\..\libs\SDL-1.2.14\include&quot;;..\..\Box2D\Include;..\..\Box2D\Contrib;..\..\libs\angelscript\angelscript\include;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;FREEGLUT_EXPORTS;FREEGLUT_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="1"
 				FloatingPointExceptions="false"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdIncl.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -203,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\tests\Walker.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\tests\Walker.h"
 				>
 			</File>
@@ -228,6 +234,22 @@
 				<File
 					RelativePath="..\swarm\swarm.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\swarm\swarm.h"
@@ -247,32 +269,64 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="util"
+			>
+			<File
+				RelativePath="..\CfgParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\CfgParser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Color.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Color.h"
+				>
+			</File>
+			<File
+				RelativePath="..\DebugTrace.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DebugTrace.h"
+				>
+			</File>
+			<File
+				RelativePath="..\InputBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\InputBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\StdInclPCH.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\ThreadManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\ThreadManager.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\appconfig.txt"
-			>
-		</File>
-		<File
-			RelativePath="..\CfgParser.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\CfgParser.h"
-			>
-		</File>
-		<File
-			RelativePath="..\Color.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Color.h"
-			>
-		</File>
-		<File
-			RelativePath="..\DebugTrace.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\DebugTrace.h"
 			>
 		</File>
 		<File
@@ -281,14 +335,6 @@
 		</File>
 		<File
 			RelativePath="..\Graph.h"
-			>
-		</File>
-		<File
-			RelativePath="..\InputBuffer.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\InputBuffer.h"
 			>
 		</File>
 		<File
@@ -333,14 +379,6 @@
 		</File>
 		<File
 			RelativePath="..\TestList.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\ThreadManager.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\ThreadManager.h"
 			>
 		</File>
 		<File

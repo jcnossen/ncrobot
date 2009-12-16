@@ -1,3 +1,4 @@
+#include "StdIncl.h"
 #include "BipedDef.h"
 
 int16 BipedDef::count = 0;

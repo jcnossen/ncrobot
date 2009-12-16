@@ -1,3 +1,4 @@
+#include "StdIncl.h"
 #include "Biped.h"
 #include "BipedDef.h"
 

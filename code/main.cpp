@@ -18,11 +18,13 @@
 
 #include "StdIncl.h"
 
+#include <SDL.h>
+
 #include "glui/GL/glui.h"
 
 #include "Render.h"
 #include "Test.h"
-
+#include "Graph.h"
 #include "swarm/Swarm.h"
 #include "GAOptimizer.h"
 
@@ -52,6 +54,7 @@ namespace
 	SimulationConfig simConfig;
 	SimulationManager *simManager;
 
+	Graph* graph;
 }
 
 static std::vector<TestEntry> testEntries;
@@ -63,7 +66,7 @@ typedef Optimizer* OptimizerCreateFn();
 
 struct OptimizerEntry {
 	OptimizerCreateFn *createFn;
-	const char*name;
+	const char *name, *id;
 };
 
 Optimizer* CreateSwarm() { 
@@ -81,8 +84,8 @@ Optimizer* CreateGA() {
 //Optimizer* CreateSwarm() { return new Swarm(swarmConfig); }
 
 OptimizerEntry optimizers[] = {
-	{ CreateSwarm, "Particle Swarm" },
-	{ CreateGA, "Genetic Algorithm"	},
+	{ CreateSwarm, "Particle Swarm", "pso" },
+	{ CreateGA, "Genetic Algorithm", "ga"	},
 //	{ CreateSA, "Simulated Annealing" },
 	{ 0, 0}
 };
@@ -93,8 +96,10 @@ void Resize(int32 w, int32 h)
 	width = w;
 	height = h;
 
-	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
-	glViewport(tx, ty, tw, th);
+ 	GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
+ 	glViewport(tx, ty, tw, th);
+
+//	glViewport(0, 0, width, height);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -139,6 +144,11 @@ void Timer(int)
 
 void SimulationLoop()
 {
+	if (simManager->IsOptimizing())
+		optimizeButton->set_name("Stop optimization");
+	else
+		optimizeButton->set_name("Run optimization");
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -158,7 +168,8 @@ void SimulationLoop()
 		simManager->interactiveSettings.hz = settingsHz;
 		simManager->InteractiveTick();
 	}
-	DrawString(5, 15, simManager->GetInfoString().c_str());
+
+	simManager->DrawInfo(15);
 
 	glutSwapBuffers();
 }
@@ -187,11 +198,13 @@ void Keyboard(unsigned char key, int x, int y)
 		Resize(width, height);
 		break;
 
+	case 'r':
+		simManager->Reset();
+		break;
+
 	default:
 		if (test)
-		{
 			test->Keyboard(key);
-		}
 	}
 }
 
@@ -301,24 +314,19 @@ void RunOptimization(int)
 {
 	if(simManager->IsOptimizing()) {
 		simManager->StopOptimization();
-
-		optimizeButton->set_name("Run optimization");
 	}
 	else {
 		Optimizer* optimizer = optimizers[selectedOptimizer].createFn();
 		simManager->SetOptimizer(optimizer);
 		simManager->StartOptimization(simConfig);
-		optimizeButton->set_name("Stop optimization");
 	}
 }
 
 
 void ShowGraph(int)
 {
-// 	if (!graph) {
-// 		graph = new Graph();
-// 		glutSetWindow(mainWindow);
-// 	}
+	if (!graph) 
+		graph = new Graph();
 }
 
 void CollectTestEntries() {
@@ -335,10 +343,84 @@ void CollectTestEntries() {
 	}
 }
 
+void PrintHelp() {
+	printf("ncrobot <options>\n"
+		"-cl\tCommand line only, no UI\n"
+		"-ps <value>\tSet population size\n"
+		"-len <seconds>\tSet length of simulation\n"
+		"-maxticks <ticks>\tSet the max number of ticks, defaults to -1 for no max\n"
+		"-maxtime <seconds>\tSet time limit for optimization run\n"
+		"-threads <int>\tSet # of CPU threads used, default 4\n"
+		);
+}
+
+bool ParseCmdLine(int argc, char **argv) {
+	bool cmdLineRun = false;
+	std::string matlabReportFile;
+
+	int maxTicks=-1,maxTime=-1,patience=-1;
+
+	for(int a=1;a<argc;a++) {
+		if (!STRCASECMP(argv[a], "-test") && a<argc-1) 
+			testIndex = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-cl"))
+			cmdLineRun=true;
+		else if (!STRCASECMP(argv[a], "-ps") && a<argc-1) 
+			simConfig.population = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-len") && a<argc-1)
+			simConfig.simLength = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-maxticks") && a<argc-1)
+			maxTicks = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-maxtime") && a<argc-1)
+			maxTime = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-patience") && a<argc-1)
+			patience = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-threads") && a<argc-1)
+			simConfig.numSimThreads = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-mlreport") && a<argc-1) {
+			matlabReportFile = argv[++a];
+			d_trace("Writing to matlab script: %s\n", matlabReportFile.c_str());
+		} 
+		else if(!STRCASECMP(argv[a], "-h")) {
+			PrintHelp();
+			return true;
+		}
+	}
+
+	if (cmdLineRun) {
+		simConfig.maxTicks=maxTicks;
+		simConfig.maxTime=maxTime;
+		simConfig.patience=patience;
+
+		uint start = SDL_GetTicks();
+
+		simManager = new SimulationManager();
+		TestEntry* te = &testEntries[testIndex];
+		d_trace("Running test: %s\n", te->name);
+		simManager->ChangeTest(&testEntries[testIndex]);
+		simManager->SetOptimizer(CreateSwarm());
+		simManager->Optimize(simConfig);
+
+		float td = 0.001f* (SDL_GetTicks() - start);
+		d_trace("Time taken: %.1f s", td);
+
+		if (!matlabReportFile.empty()) {
+			std::string header = SPrintf("%% Test: '%d', PS: %d, Sim len: %.1f, Optimize time taken: %.1f s",
+				te->name, simConfig.population, simConfig.simLength, td);
+			simManager->WriteMatlabData(matlabReportFile, header.c_str());
+		}
+		return true;
+	}
+
+	return false; // continue as normal
+}
+
 int main(int argc, char** argv)
 {
-
 	CollectTestEntries();
+
+	if (ParseCmdLine(argc, argv))
+		return 0;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -359,9 +441,8 @@ int main(int argc, char** argv)
 #endif
 	glutMotionFunc(MouseMotion);
 
-	glui = GLUI_Master.create_glui_subwindow( mainWindow, 
-		GLUI_SUBWINDOW_RIGHT );
-	//glui = GLUI_Master.create_glui("Controls");
+	glui = GLUI_Master.create_glui_subwindow( mainWindow, GLUI_SUBWINDOW_RIGHT );
+//	glui = GLUI_Master.create_glui("Controls");
 
 	glui->add_statictext("Tests");
 	GLUI_Listbox* testList = glui->add_listbox("", &testSelection);
@@ -373,7 +454,6 @@ int main(int argc, char** argv)
 	GLUI_Listbox* optimList = glui->add_listbox("", &selectedOptimizer);
 	for(int i=0;optimizers[i].createFn;i++)
 		optimList->add_item(i, optimizers[i].name);
-	glui->add_separator();
 
 	glui->add_statictext("Swarm graph type");
 	GLUI_Listbox* graphTypeList = glui->add_listbox("", &swarmConfig.graphType);
@@ -397,7 +477,7 @@ int main(int argc, char** argv)
 
 	optimizeButton = glui->add_button("Run optimization",0, RunOptimization);
 	glui->add_button("Reset", 0, Reset);
-	glui->add_checkbox("Graph", &showGraph);
+//	glui->add_checkbox("Graph", &showGraph);
 
 	glui->add_button("Quit", 0,(GLUI_Update_CB)exit);
 	glui->set_main_gfx_window( mainWindow );

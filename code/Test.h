@@ -177,7 +177,7 @@ public:
 	Test();
 	virtual ~Test();
 
-	void SetTextLine(int32 line) { m_textLine = line; }
+	void SetTextLine(int32 line) { textLine = line; }
 	virtual void Step(TestSettings* settings);
 
 	void DrawMouseJoint();
@@ -189,6 +189,9 @@ public:
 	void SetupListeners();
 
 	std::vector<ParamInfo> GetParamInfo();
+
+	virtual std::string GetInfo() { return ""; }
+
 	void SetControlParams(float* vals);
 
 	void CreateBaseWorld();
@@ -196,8 +199,8 @@ public:
 	virtual float GetScore() = 0;
 	void SetupForPSO();
 
-	float GetTime() { return m_time; }
-	void SetTime(float t) { m_time=t; }
+	float GetTime() { return time; }
+	void SetTime(float t) { time=t; }
 
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
@@ -205,22 +208,26 @@ public:
 
 	uint CalcHash();
 
+	static bool IsBodyTouching(b2Body *a, b2Body *b);
+	static bool IsShapeTouching(b2Shape* a, b2Shape *b);
+
 protected:
 	friend class DestructionListener;
 	friend class BoundaryListener;
 	friend class ContactListener;
 
-	b2AABB m_worldAABB;
-	ContactPoint m_points[k_maxContactPoints];
-	int32 m_pointCount;
-	DestructionListener m_destructionListener;
-	BoundaryListener m_boundaryListener;
-	ContactListener m_contactListener;
-	DebugDraw m_debugDraw;
-	int32 m_textLine;
-	b2World* m_world;
-	b2MouseJoint* m_mouseJoint;
-	float m_time;
+	b2AABB worldAABB;
+	ContactPoint contactPoints[k_maxContactPoints];
+	int32 contactPointCount;
+	DestructionListener destructionListener;
+	BoundaryListener boundaryListener;
+	ContactListener contactListener;
+	DebugDraw debugDraw;
+	int32 textLine;
+	b2World* world;
+	b2MouseJoint* mouseJoint;
+	float time;
+	b2Shape* mainGroundShape;
 
 	std::vector<float> params;
 	std::vector<ParamInfo> inputs;

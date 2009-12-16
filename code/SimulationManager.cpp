@@ -63,13 +63,27 @@ void SimulationManager::Optimize()
 	int simticks = optimizeSettings.hz * config.simLength;
 	d_trace("Starting optimization with %d threads. Simticks=%d\n", config.numSimThreads, simticks);
 
+	runHistory.clear();
+	bestRun = 0;
+	isOptimizing=true;
+	stopOptimization = false;
+
+	optimizeSettings = interactiveSettings;
+	optimizeSettings.optimizing=true;
+	optimizeSettings.pause=0;
+
 	std::vector<ParameterRange> ranges = GetRanges();
 	bestRun = 0;
+
+	int patience = 1;
 
 	int i = 0;
 	while (!stopOptimization) {
 		float t = (SDL_GetTicks()-startTicks) * 0.001f;
-		if (t >= config.maxTime || i == config.maxTicks)
+
+		if ( (config.maxTime >= 0 && t >= config.maxTime)
+			|| (config.maxTicks >= 0 && i == config.maxTicks)
+			|| (config.patience >= 0 && patience == config.patience))
 			break;
 
 		d_trace("Swarm update tick: %d. T (minutes)=%f. ", i, t/60.0f);
@@ -103,6 +117,7 @@ void SimulationManager::Optimize()
 			ri.score = workItem.score;
 			ri.controlState = std::vector<float> (sv, sv + ranges.size());
 			ri.hashHistory = workItem.hashHistory;
+			ri.iteration = i;
 			SafeDelete(workItem.test);
 
 			if (!bestRun || workItem.score > bestRun->score)
@@ -126,6 +141,11 @@ void SimulationManager::Optimize()
 	isOptimizing = false;
 }
 
+void SimulationManager::Optimize( SimulationConfig cfg )
+{
+	config = cfg;
+	Optimize();
+}
 
 
 
@@ -147,14 +167,6 @@ int SimulationManager::OptimizeThreadMain(void *p)
 void SimulationManager::StartOptimization( SimulationConfig cfg )
 {
 	config = cfg;
-	runHistory.clear();
-	bestRun = 0;
-	isOptimizing=true;
-	stopOptimization = false;
-
-	optimizeSettings = interactiveSettings;
-	optimizeSettings.optimizing=true;
-	optimizeSettings.pause=0;
 	SDL_CreateThread(OptimizeThreadMain, this);
 }
 
@@ -246,5 +258,30 @@ void SimulationManager::CheckHash()
 			hashFailed=true;
 		}
 	}
+}
+
+void SimulationManager::WriteMatlabData( std::string file, std::string header )
+{
+	FILE *f = fopen(file.c_str(), "w");
+
+	fputs(header.c_str(), f);
+	fprintf(f, "ncdata=[];");
+	int i = 1;
+	for(std::list<RunInfo>::iterator rii = runHistory.begin(); rii!=runHistory.end();++rii) {
+		fprintf(f, "ncdata(%d).i = %d; ncdata(%d).score = %f;\n",i, rii->iteration, i, rii->score);
+		fprintf(f, "ncdata(%d).params = [ ", i);
+		for(int j=0;j<rii->controlState.size();j++)
+			fprintf(f, "%f ", rii->controlState[j]);
+		fprintf(f, "];\n");
+		i++;
+	}
+}
+
+void SimulationManager::DrawInfo( int sy )
+{
+	DrawString(5, sy, GetInfoString().c_str());
+	std::string testStr = test->GetInfo();
+	if (testStr.length()>0)
+		DrawString(5, sy + 20, testStr.c_str());
 }
 

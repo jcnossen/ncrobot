@@ -26,7 +26,7 @@ public:
 		sd.filter.groupIndex = 0;
 		b2BodyDef bd;
 		bd.position = m_offset;
-		chassis = m_world->CreateBody(&bd);
+		chassis = world->CreateBody(&bd);
 		chassis->CreateShape(&sd);
 		chassis->SetMassFromShapes();
 
@@ -37,7 +37,7 @@ public:
 	void AddWheel(b2Vec2 pos) {
 		b2BodyDef upperDef;
 		upperDef.position = pos;
-		b2Body* body = m_world->CreateBody(&upperDef);
+		b2Body* body = world->CreateBody(&upperDef);
 		b2CircleDef cd;
 		cd.density=1.0f;
 		cd.radius=2.0f;
@@ -50,7 +50,7 @@ public:
 		jd.enableMotor=true;
 		jd.maxMotorTorque=2000;
 
-		wheels.push_back((b2RevoluteJoint*)m_world->CreateJoint(&jd));
+		wheels.push_back((b2RevoluteJoint*)world->CreateJoint(&jd));
 		inputs.push_back(ParamInfo(-50,50));
 	}
 

@@ -7,9 +7,9 @@ struct SwarmConfig
   SwarmConfig() { 
 		popSize=20; 
 		graphType=4; 
-		randomParam=0.1; 	
-    phi1=phi2=1.49618;
-    omega=0.7298;
+		randomParam=0.1f; 	
+    phi1=phi2=1.49618f;
+    omega=0.7298f;
 	}
 
   int popSize;
