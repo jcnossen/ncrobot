@@ -249,7 +249,7 @@ void SimulationManager::CheckHash()
 	if (hashFailed)
 		return;
 
-	if (bestRun) {
+	if (bestRun && tick < bestRun->hashHistory.size()) {
 		uint hash = test->CalcHash();
 		uint wantedHash = bestRun->hashHistory[tick+1];
 
@@ -265,7 +265,7 @@ void SimulationManager::WriteMatlabData( std::string file, std::string header )
 	FILE *f = fopen(file.c_str(), "w");
 
 	fputs(header.c_str(), f);
-	fprintf(f, "ncdata=[];");
+	fprintf(f, "\nncdata=[];");
 	int i = 1;
 	for(std::list<RunInfo>::iterator rii = runHistory.begin(); rii!=runHistory.end();++rii) {
 		fprintf(f, "ncdata(%d).i = %d; ncdata(%d).score = %f;\n",i, rii->iteration, i, rii->score);
@@ -280,8 +280,10 @@ void SimulationManager::WriteMatlabData( std::string file, std::string header )
 void SimulationManager::DrawInfo( int sy )
 {
 	DrawString(5, sy, GetInfoString().c_str());
-	std::string testStr = test->GetInfo();
-	if (testStr.length()>0)
-		DrawString(5, sy + 20, testStr.c_str());
+	if (!isOptimizing) {
+		std::string testStr = test->GetInfo();
+		if (testStr.length()>0)
+			DrawString(5, sy + 20, testStr.c_str());
+	}
 }
 

@@ -4,6 +4,10 @@
 #include "Walker.h"
 
 
+#define MOTOR_TORQUE 1200
+#define USE_LIMITS true
+#define RESTITUTION 0.0f
+#define FRICTION 0.6f
 
 class WalkerTestFactory : TestFactoryBase {
 public:
@@ -28,7 +32,7 @@ public:
 			Walker* crab = new Walker(1.5f);
 
 			b2Vec2 s = crab->m_offset;
-//			crab->CreateLeg( b2Vec2(s.x-1.0f, s.y), true, )
+			crab->CreateLegPiece(crab->chassis, s+b2Vec2(-2.0f, 0.0f), 6, -PI/2);
 
 			return crab;
 		}
@@ -50,65 +54,45 @@ public:
 
 static WalkerTestFactory walkerTestFactory;
 
+
+
 void Walker::CreateLeg( b2Vec2 start, bool knee, bool limits )
 {
-	float mmt=1200.0f;
 	float kneeY = m_offset.y*0.4f;
 	float limitAng=3.1415*0.5f;
 	// upper leg, distance joint to chassis
 
-	limits=false;
-	bool collideKnees=true;
+	bool collideKnees=false;
 
-	b2BodyDef upperDef;
-	upperDef.position = b2Vec2(start.x, start.y*0.5f);
-
-	Motor m;
-	b2Body* body;
-
-	if (knee) {
-		body = world->CreateBody(&upperDef);
-		b2CircleDef cd;
-		cd.density=1.0f;
-		cd.radius=1.0f;
-		cd.filter.groupIndex=collideKnees?1:-1;
-		body->CreateShape(&cd);
-		body->SetMassFromShapes();
-
-		b2RevoluteJointDef jd;
-		jd.Initialize(chassis, body, start);
-		jd.enableMotor=true;
-		jd.maxMotorTorque=mmt;
-		jd.enableLimit=limits;
-		jd.lowerAngle = -limitAng;
-		jd.upperAngle = limitAng;
-		jd.collideConnected=true;
-		m.joint =(b2RevoluteJoint*)world->CreateJoint(&jd);
-		AddMotor(m);
+	b2Body* b = chassis;
+	b2Vec2 attachPos = b2Vec2(start.x, start.y);
+	
+	for(int k=0;k<1;k++) {
+		b = CreateLegPiece(b, attachPos, 6.0f, 0.0f);//b->GetAngle() + start.x*0.1f);
+		attachPos = b->GetWorldCenter();
 	}
 
 	// lower leg
 	b2PolygonDef foot;
 	foot.SetAsBox(0.8f, 0.4f);
-	foot.density=1.0f;
+	foot.density=0.7f;
+	foot.friction=FRICTION;
+	foot.restitution=RESTITUTION;
 	foot.filter.groupIndex = collideKnees ? 1 : -1;
 	Motor f;
 	b2BodyDef fd;
-	fd.position=b2Vec2(start.x, .5f);
+	fd.position=attachPos - b2Vec2(0.0f, 4.0f);
 	b2Body* fb = world->CreateBody(&fd);
 	fb->CreateShape(&foot);
 	fb->SetMassFromShapes();
 	b2RevoluteJointDef jd;
-	if (knee)
-		jd.Initialize(body, fb, body->GetWorldCenter());
-	else
-		jd.Initialize(chassis, fb, start);
+	jd.Initialize(b, fb, attachPos);
 
 	jd.enableMotor=true;
-	jd.maxMotorTorque=mmt;
+	jd.maxMotorTorque=MOTOR_TORQUE;
 	jd.lowerAngle = -limitAng;
 	jd.upperAngle = limitAng;
-	jd.enableLimit=limits;
+	jd.enableLimit=USE_LIMITS;
 	jd.collideConnected=true;
 	f.joint=(b2RevoluteJoint*)world->CreateJoint(&jd);
 
@@ -125,9 +109,11 @@ Walker::Walker(float w)
 	world->SetContactListener(&contactListener);
 
 	b2PolygonDef sd;
-	sd.density = 0.2f;
+	sd.density = 1.5f;
 	sd.SetAsBox(w, 1.0f);
-	sd.filter.groupIndex = 0;
+	sd.filter.groupIndex = 1;
+	sd.friction=FRICTION;
+	sd.restitution=RESTITUTION;
 	b2BodyDef bd;
 	bd.position = m_offset;
 	chassis = world->CreateBody(&bd);
@@ -171,24 +157,25 @@ void Walker::UpdateMotors()
 		float wantedAng = param[0] + param[1] * sinf(param[2] * time - param[3]) + param[4] * sinf(ang) + param[5] * chassis->GetAngle();
 		float s = param[6];
 
-		j->SetMotorSpeed( (ang > wantedAng) ? -s : s);
+		//j->SetMotorSpeed( (ang > wantedAng) ? -s : s);
+		j->SetMotorSpeed(wantedAng);
 	}
 }
 
 float Walker::GetScore()
 {
 	b2Vec2 p = chassis->GetWorldCenter();
-	return p.x;// - groundHitPenalty*10.0f;
+	return p.x- groundHitPenalty*5.0f;
 	//	return chassis->GetLinearVelocity().x;
 }
 
 void Walker::CreateLegs( int n, bool knees, bool limits )
 {
-	float lw = 4.0f;
+	float lw = 5.0f;
 	float w=lw*n;
 
 	for (int i=0;i<n;i++)
-		CreateLeg(b2Vec2(m_offset.x-w/2+lw*(i+0.5f), m_offset.y-1.5f), knees, limits);
+		CreateLeg(b2Vec2(m_offset.x-w/2+lw*(i+0.5f), m_offset.y), knees, limits);
 }
 
 void Walker::ContactListener::Result(const b2ContactResult* point) {
@@ -198,6 +185,43 @@ void Walker::ContactListener::Result(const b2ContactResult* point) {
 		walker->isHittingGround=true;
 }
 
-std::string Walker::GetInfo() {
+std::string Walker::GetInfo()
+{
 	return SPrintf("GroundHitPenalty: %.2f", groundHitPenalty);
 }
+
+b2Body* Walker::CreateLegPiece( b2Body* parent, b2Vec2 pos, float len, float angle )
+{
+	float limitAng=PI*0.5f;
+
+	Vector2 v = Vector2(angle-0.5f*PI) * len;
+	b2BodyDef bd;
+	bd.position = pos + b2Vec2(v.x, v.y);
+	bd.angularDamping=0.5f;
+	bd.linearDamping=0.5f;
+
+	b2Body* body = world->CreateBody(&bd);
+	b2CircleDef cd;
+	cd.density=0.5f;
+	cd.radius=.5f;
+	cd.friction=FRICTION;
+	cd.restitution=RESTITUTION;
+	cd.filter.groupIndex=-1;
+	body->CreateShape(&cd);
+	body->SetMassFromShapes();
+
+	b2RevoluteJointDef jd;
+	jd.Initialize(parent, body, pos);
+	jd.enableMotor=true;
+	jd.maxMotorTorque= MOTOR_TORQUE;
+	jd.enableLimit= USE_LIMITS;
+	jd.lowerAngle = -limitAng;
+	jd.upperAngle = limitAng;
+	jd.collideConnected=true;
+	Motor m;
+	m.joint =(b2RevoluteJoint*)world->CreateJoint(&jd);
+	AddMotor(m);
+	
+	return body;
+}
+

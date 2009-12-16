@@ -49,10 +49,10 @@ std::vector<TestFactoryBase*> TestFactoryBase::getFactoryList()
 
 void Test::SetupForPSO()
 {
-	world->SetDebugDraw(0);
-	world->SetDestructionListener(0);
-	world->SetBoundaryListener(0);
-	world->SetContactFilter(0);
+// 	world->SetDebugDraw(0);
+// 	world->SetDestructionListener(0);
+// 	world->SetBoundaryListener(0);
+// 	world->SetContactFilter(0);
 }
 
 std::vector<ParamInfo> Test::GetParamInfo()
@@ -70,8 +70,9 @@ void Test::SetControlParams(float* v)
 void Test::CreateBaseWorld()
 {
 	b2PolygonDef sd;
-	float e=300.0f;
-	sd.SetAsBox(e, 10.0f);
+	float e=500.0f;
+	float xs=400.0f;
+	sd.SetAsBox(e, 10.0f, b2Vec2(xs, 0), 0.0f);
 	sd.friction = 1.0f;
 
 	b2BodyDef bd;
@@ -80,10 +81,10 @@ void Test::CreateBaseWorld()
 	ground->CreateShape(&sd);
 	mainGroundShape = ground->GetShapeList();
 
-	sd.SetAsBox(0.5f, 5.0f, b2Vec2(-e, 15.0f), 0.0f);
+	sd.SetAsBox(0.5f, 5.0f, b2Vec2(-e+xs, 15.0f), 0.0f);
 	ground->CreateShape(&sd);
 
-	sd.SetAsBox(0.5f, 5.0f, b2Vec2(e, 15.0f), 0.0f);
+	sd.SetAsBox(0.5f, 5.0f, b2Vec2(e+xs, 15.0f), 0.0f);
 	ground->CreateShape(&sd);
 }
 
@@ -161,8 +162,8 @@ void ContactListener::Remove(const b2ContactPoint* point)
 
 Test::Test()
 {
-	worldAABB.lowerBound.Set(-2000.0f, -1000.0f);
-	worldAABB.upperBound.Set(2000.0f, 2000.0f);
+	worldAABB.lowerBound.Set(-500.0f, -100.0f);
+	worldAABB.upperBound.Set(2000.0f, 500.0f);
 	b2Vec2 gravity;
 	gravity.Set(0.0f, -40.0f);
 	bool doSleep = false;

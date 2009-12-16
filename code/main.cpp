@@ -405,7 +405,7 @@ bool ParseCmdLine(int argc, char **argv) {
 		d_trace("Time taken: %.1f s", td);
 
 		if (!matlabReportFile.empty()) {
-			std::string header = SPrintf("%% Test: '%d', PS: %d, Sim len: %.1f, Optimize time taken: %.1f s",
+			std::string header = SPrintf("%% Test: '%s', PS: %d, Sim len: %.1f, Optimize time taken: %.1f s",
 				te->name, simConfig.population, simConfig.simLength, td);
 			simManager->WriteMatlabData(matlabReportFile, header.c_str());
 		}
