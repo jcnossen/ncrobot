@@ -10,6 +10,7 @@
 	#include <windows.h>
 #endif
 
+static std::string logFile;
 
 void d_trace(const char *fmt, ...)
 {
@@ -36,6 +37,12 @@ void d_puts (const char *buf)
 #ifdef WIN32
 	printf (buf);
 #endif
+
+	if (!logFile.empty()) {
+		FILE *f = fopen(logFile.c_str(), "a");
+		fputs(buf, f);
+		fclose(f);
+	}
 }
 
 
@@ -46,4 +53,9 @@ void d_assert(char *str, char *file, int line)
 	d_trace (msg.c_str());
 
 	throw std::runtime_error(msg.c_str());
+}
+
+void d_setlogfile( const char *f )
+{
+	logFile = f;
 }

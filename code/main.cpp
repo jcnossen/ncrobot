@@ -149,6 +149,7 @@ void SimulationLoop()
 	else
 		optimizeButton->set_name("Run optimization");
 
+	glClearColor(0.4f,0.4f,0.4f,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -376,8 +377,12 @@ bool ParseCmdLine(int argc, char **argv) {
 			maxTime = atoi(argv[++a]);
 		else if (!STRCASECMP(argv[a], "-patience") && a<argc-1)
 			patience = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-topology") && a<argc-1)
+			swarmConfig.graphType = atoi(argv[++a]);
 		else if (!STRCASECMP(argv[a], "-threads") && a<argc-1)
 			simConfig.numSimThreads = atoi(argv[++a]);
+		else if (!STRCASECMP(argv[a], "-log") && a<argc-1)
+			d_setlogfile(argv[++a]);
 		else if (!STRCASECMP(argv[a], "-mlreport") && a<argc-1) {
 			matlabReportFile = argv[++a];
 			d_trace("Writing to matlab script: %s\n", matlabReportFile.c_str());
@@ -426,10 +431,8 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
-	char title[32];
-	sprintf(title, "Box2D Version %d.%d.%d", b2_version.major, b2_version.minor, b2_version.revision);
 	glutSetOption (GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-	mainWindow = glutCreateWindow(title);
+	mainWindow = glutCreateWindow("Natural Computing Robot");
 	
 	glutDisplayFunc(SimulationLoop);
 	GLUI_Master.set_glutReshapeFunc(Resize);  

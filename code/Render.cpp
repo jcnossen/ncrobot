@@ -28,6 +28,10 @@
 #include <cstdio>
 #include <cstdarg>
 
+void solidColor() { 
+	glColor4f(0.5f,0.9f,0.5f,0.8f);
+}
+
 void DebugDraw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 {
 	glColor3f(color.r, color.g, color.b);
@@ -43,7 +47,7 @@ void DebugDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, cons
 {
 	glEnable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
+	solidColor();
 	glBegin(GL_TRIANGLE_FAN);
 	for (int32 i = 0; i < vertexCount; ++i)
 	{
@@ -52,7 +56,7 @@ void DebugDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, cons
 	glEnd();
 	glDisable(GL_BLEND);
 
-	glColor4f(color.r, color.g, color.b, 1.0f);
+	glColor4f(0,0,0,1);
 	glBegin(GL_LINE_LOOP);
 	for (int32 i = 0; i < vertexCount; ++i)
 	{
@@ -84,7 +88,7 @@ void DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Ve
 	float32 theta = 0.0f;
 	glEnable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
+	solidColor();
 	glBegin(GL_TRIANGLE_FAN);
 	for (int32 i = 0; i < k_segments; ++i)
 	{
@@ -96,7 +100,8 @@ void DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Ve
 	glDisable(GL_BLEND);
 
 	theta = 0.0f;
-	glColor4f(color.r, color.g, color.b, 1.0f);
+//	glColor4f(color.r, color.g, color.b, 1.0f);
+	glColor4f(0,0,0,1);
 	glBegin(GL_LINE_LOOP);
 	for (int32 i = 0; i < k_segments; ++i)
 	{
@@ -179,7 +184,8 @@ void DrawString(int x, int y, const char *string, ...)
 	glPushMatrix();
 	glLoadIdentity();
 
-	glColor3f(0.9f, 0.6f, 0.6f);
+	//glColor3f(0.9f, 0.6f, 0.6f);
+	glColor3f(1,1,1);
 	glRasterPos2i(x, y);
 	int32 length = (int32)strlen(buffer);
 	for (int32 i = 0; i < length; ++i)

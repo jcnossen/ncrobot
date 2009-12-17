@@ -41,27 +41,27 @@ void Swarm::setupGraph(int graphType, float randomParam)
 {
   int i,j;
 
-  if(graphType==0)
+  if(graphType==ST_STAR)
     for(i=1;i<populationSize;i++)
     {
       swarm[0].friends.push_back(i);
       swarm[i].friends.push_back(0);
     }
 
-  if(graphType==1)
+  if(graphType==ST_CYCLE)
     for(i=0;i<populationSize;i++)
     {
       swarm[i].friends.push_back((i+1)%populationSize);
       swarm[(i+1)%populationSize].friends.push_back(i);
     }   
 
-  if(graphType==2)
+  if(graphType==ST_KN)
     for(i=0;i<populationSize;i++)
       for(j=0;j<populationSize;j++)
         if(j!=i)
           swarm[i].friends.push_back(j);
           
-  if(graphType==3)
+  if(graphType==ST_SQUARE)
   {
     int z = (int)sqrtf(populationSize);
     if(z*z!=populationSize) z++;
@@ -85,7 +85,7 @@ void Swarm::setupGraph(int graphType, float randomParam)
         }
   }
 
-  if(graphType==4)
+  if(graphType==ST_RANDOM)
   {
     for(i=0;i<populationSize;i++)
       for(j=i+1;j<populationSize;j++)

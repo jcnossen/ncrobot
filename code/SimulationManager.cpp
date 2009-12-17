@@ -86,7 +86,7 @@ void SimulationManager::Optimize()
 			|| (config.patience >= 0 && patience == config.patience))
 			break;
 
-		d_trace("Swarm update tick: %d. T (minutes)=%f. ", i, t/60.0f);
+		d_trace("Optimization update tick: %d. T (minutes)=%f. ", i, t/60.0f);
 
 		optimizer->Update();
 
@@ -136,6 +136,11 @@ void SimulationManager::Optimize()
 
 		Reset();
 	}
+
+	float nsec = i*config.population*config.simLength;
+	float timeUsed=(SDL_GetTicks()-startTicks) * 0.001f;
+	d_trace("Optimization time used: %f minutes. %d iterations, %.1f seconds simulated\n", timeUsed / 60, i, nsec);
+	d_trace("Processing speed: %.1f sim seconds per second\n", nsec/ timeUsed);
 
 	SafeDelete(optimizer);
 	isOptimizing = false;
