@@ -385,10 +385,6 @@
 			RelativePath="..\Vector2.h"
 			>
 		</File>
-		<File
-			RelativePath="..\XForm.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
