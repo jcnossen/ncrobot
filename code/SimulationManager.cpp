@@ -280,6 +280,7 @@ void SimulationManager::WriteMatlabData( std::string file, std::string header )
 		fprintf(f, "];\n");
 		i++;
 	}
+	fclose(f);
 }
 
 void SimulationManager::DrawInfo( int sy )
