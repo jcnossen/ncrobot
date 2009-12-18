@@ -27,6 +27,7 @@
 #include "Graph.h"
 #include "swarm/Swarm.h"
 #include "GAOptimizer.h"
+#include "CfgParser.h"
 
 #include "SimulationManager.h"
 
@@ -54,6 +55,7 @@ namespace
 	SimulationConfig simConfig;
 	SimulationManager *simManager;
 
+	std::string loadParamSetFile; 
 	Graph* graph;
 }
 
@@ -344,6 +346,30 @@ void CollectTestEntries() {
 	}
 }
 
+void LoadDemoConfig(){
+	CfgList* l = CfgValue::LoadFile(loadParamSetFile);
+
+	testIndex = l->GetInt("test", 0);
+	TestEntry* testEntry = &testEntries[testIndex];
+	CfgList* paramList = l->GetList("params");
+	
+	std::vector<float> params;
+
+	for(CfgList::iterator li=paramList->begin();li!=paramList->end();++li) {
+		CfgValue* v = li->value;
+		if (v->getType() != CfgValue::Numeric)
+			throw ContentException("Parse error in demo");
+		params.push_back(((CfgNumeric*)v )->value);
+	}
+
+	Test* test = testEntry->create();
+	if (params.size() != test->GetParamInfo().size()) 
+		throw ContentException(SPrintf("Invalid number of test parameters. Should be %d instead of %d", test->GetParamInfo().size(), params.size()));
+	
+	test->SetControlParams(&params.front());
+	simManager->SetTest(test, testEntry);
+}
+
 void PrintHelp()
 {
 	printf("ncrobot <options>\n"
@@ -387,6 +413,9 @@ bool ParseCmdLine(int argc, char **argv) {
 			matlabReportFile = argv[++a];
 			d_trace("Writing to matlab script: %s\n", matlabReportFile.c_str());
 		} 
+		else if (!STRCASECMP(argv[a], "-load") && a<argc-1) {
+			loadParamSetFile = argv[++a];
+		}
 		else if(!STRCASECMP(argv[a], "-h")) {
 			PrintHelp();
 			return true;
@@ -490,7 +519,11 @@ int main(int argc, char** argv)
 	glutTimerFunc(framePeriod, Timer, 0);
 
 	simManager = new SimulationManager();
-	simManager->ChangeTest(&testEntries[testIndex]);
+
+	if (!loadParamSetFile.empty())
+		LoadDemoConfig();
+	else
+		simManager->ChangeTest(&testEntries[testIndex]);
 
 	glutMainLoop();
 

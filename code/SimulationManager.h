@@ -46,7 +46,7 @@ public:
 	bool IsOptimizing() { return isOptimizing; }
 	Test* GetTest() { return test; }
 	void Reset();
-	void SetTest(Test* t);
+	void SetTest(Test* t, TestEntry*f);
 
 	std::string GetInfoString();
 	std::vector<ParameterRange> GetRanges();

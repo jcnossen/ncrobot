@@ -195,8 +195,7 @@ void SimulationManager::InteractiveTick()
 void SimulationManager::ChangeTest( TestEntry *f )
 {
 	assert(!isOptimizing);
-	testEntry = f;
-	SetTest(f->create());
+	SetTest(f->create(), f);
 }
 
 std::vector<ParameterRange> SimulationManager::GetRanges()
@@ -224,7 +223,7 @@ std::string SimulationManager::GetInfoString()
 
 void SimulationManager::Reset()
 {
-	SetTest(testEntry->create());
+	SetTest(testEntry->create(), testEntry);
 	if (bestRun) {
 		test->SetControlParams(&bestRun->controlState.front());
 
@@ -239,10 +238,11 @@ void SimulationManager::StopOptimization()
 	stopOptimization = true;
 }
 
-void SimulationManager::SetTest( Test* t )
+void SimulationManager::SetTest( Test* t, TestEntry* factory )
 {
 	SafeDelete(test);
 	test=t;
+	testEntry = factory;
 	test->SetupListeners();
 	tick = 0;
 	interactiveSettings.pause=0;
