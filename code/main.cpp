@@ -59,6 +59,7 @@ namespace
 	int32 showGraph=0;
 	SwarmConfig swarmConfig;
 	GLUI_Button* optimizeButton;
+	GLUI_EditText* exportEditText;
 
 	SimulationConfig simConfig;
 	SimulationManager *simManager;
@@ -340,6 +341,34 @@ void ShowGraph(int)
 		graph = new Graph();
 }
 
+void ExportAnim(int)
+{
+	const char* filename = exportEditText->get_text();
+	CfgWriter w(filename);
+	if (w.HasFailed()) {
+		d_trace("Unable to open %s for writing\n",filename);
+		return;
+	}
+
+	CfgList* cfg = new CfgList();
+	cfg->Add("test", testIndex);
+	CfgList* pl = new CfgList();
+	cfg->Add("params", pl);
+	
+	float* params = simManager->GetTest()->GetControlParams();
+	if(!params)  {
+		d_trace("Export failed, no control params\n");
+	} else {
+		int s = simManager->GetRanges().size();
+		for(int a=0;a<s;a++)
+			pl->Add(params[a]);
+		cfg->Write(w);
+	}
+
+	delete cfg;
+}
+
+
 void CollectTestEntries() {
 	std::vector<TestFactoryBase*> fl = TestFactoryBase::getFactoryList();
 
@@ -354,10 +383,11 @@ void CollectTestEntries() {
 	}
 }
 
+
 void LoadDemoConfig(){
 	CfgList* l = CfgValue::LoadFile(loadParamSetFile);
 
-	testIndex = l->GetInt("test", 0);
+	testSelection = testIndex = l->GetInt("test", 0);
 	TestEntry* testEntry = &testEntries[testIndex];
 	CfgList* paramList = l->GetList("params");
 	
@@ -519,6 +549,9 @@ int main(int argc, char** argv)
 	optimizeButton = glui->add_button("Run optimization",0, RunOptimization);
 	glui->add_button("Reset", 0, Reset);
 //	glui->add_checkbox("Graph", &showGraph);
+
+	glui->add_button("Export to file:", 0, ExportAnim);
+	exportEditText = glui->add_edittext("");
 
 	glui->add_button("Quit", 0,(GLUI_Update_CB)exit);
 	glui->set_main_gfx_window( mainWindow );

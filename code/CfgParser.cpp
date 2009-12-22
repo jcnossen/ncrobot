@@ -78,7 +78,7 @@ CfgWriter::~CfgWriter()
 	}
 }
 
-bool CfgWriter::IsFailed() { return out == 0 || ferror(out); }
+bool CfgWriter::HasFailed() { return out == 0 || ferror(out); }
 
 void CfgWriter::DecIndent () { indentLevel--; }
 void CfgWriter::IncIndent () { indentLevel++; }
@@ -333,7 +333,8 @@ void CfgListElem::Write (CfgWriter& w)
 	w << name;
 
 	if (value) {
-		w << " = ";
+		if (!name.empty())
+			w << " = ";
 		value->Write (w);
 	}
 	w << "\n";

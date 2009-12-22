@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib ..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib ..\..\libs\angelscript\angelscript\lib\angelscriptd.lib"
+				AdditionalDependencies="user32.lib opengl32.lib winmm.lib gdi32.lib glu32.lib ..\..\Box2D\Library\Box2d_d.lib ..\..\Box2D\Library\freeglut_d.lib ..\..\Box2D\Library\glui_d.lib ..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib opengl32.lib glu32.lib ..\..\libs\angelscript\angelscript\lib\angelscript.lib"
+				AdditionalDependencies="..\..\libs\SDL-1.2.14\lib\SDL.lib ..\..\libs\SDL-1.2.14\lib\SDLmain.lib opengl32.lib glu32.lib"
 				OutputFile="../../bin/ncrobot.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"

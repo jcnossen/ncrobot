@@ -200,6 +200,7 @@ public:
 	virtual std::string GetInfo() { return ""; }
 
 	void SetControlParams(float* vals);
+	float* GetControlParams() { return params.empty() ? 0 : &params.front(); }
 
 	void CreateBaseWorld();
 

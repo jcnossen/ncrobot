@@ -24,7 +24,7 @@ class CfgWriter
 public:
 	CfgWriter(const char *name);
 	~CfgWriter();
-	bool IsFailed();
+	bool HasFailed();
 
 	CfgWriter& operator<<(const std::string& s);
 	CfgWriter& operator<<(char c);
