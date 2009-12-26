@@ -198,6 +198,7 @@ void Walker::ContactListener::Result(const b2ContactResult* point) {
 		walker->isHittingGround=true;
 }
 
-std::string Walker::GetInfo() {
+std::string Walker::GetInfo()
+{
 	return SPrintf("GroundHitPenalty: %.2f", groundHitPenalty);
 }

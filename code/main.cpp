@@ -27,6 +27,7 @@ misrepresented as being the original software.
 #include "StdIncl.h"
 
 #include <SDL.h>
+#include <time.h>
 
 #include "glui/GL/glui.h"
 
@@ -69,7 +70,6 @@ namespace
 }
 
 static std::vector<TestEntry> testEntries;
-
 
 
 
@@ -417,6 +417,12 @@ void PrintHelp()
 		"-maxticks <ticks>\tSet the max number of ticks, defaults to -1 for no max\n"
 		"-maxtime <seconds>\tSet time limit for optimization run\n"
 		"-threads <int>\tSet # of CPU threads used, default 4\n"
+		"-topology <int>\tSet topology type [0-4]\n"
+		"-test <int>\tSet test index\n"
+		"-log <log file>\tSet debug output file\n"
+		"-load <demo config file>\tPlayback demo (requires UI)\n"
+		"-mlreport <matlab script output>\tSet target for matlab code output\n"
+		"-srand <int>\tSet random seed\n"
 		);
 }
 
@@ -454,6 +460,9 @@ bool ParseCmdLine(int argc, char **argv) {
 		else if (!STRCASECMP(argv[a], "-load") && a<argc-1) {
 			loadParamSetFile = argv[++a];
 		}
+		else if(!STRCASECMP(argv[a], "-srand") && a<argc-1) {
+			srand(atoi(argv[++a]));
+		}
 		else if(!STRCASECMP(argv[a], "-h")) {
 			PrintHelp();
 			return true;
@@ -475,10 +484,10 @@ bool ParseCmdLine(int argc, char **argv) {
 		simManager->Optimize(simConfig);
 
 		float td = 0.001f* (SDL_GetTicks() - start);
-		d_trace("Time taken: %.1f s", td);
+		d_trace("Time taken: %.1f s\n", td);
 
 		if (!matlabReportFile.empty()) {
-			std::string header = SPrintf("%% Test: '%s', PS: %d, Sim len: %.1f, Optimize time taken: %.1f s",
+			std::string header = SPrintf("%% Test: '%s', PS: %d, Sim len: %.1f, Optimize time taken: %.1f s\n",
 				te->name, simConfig.population, simConfig.simLength, td);
 			simManager->WriteMatlabData(matlabReportFile, header.c_str());
 		}
@@ -491,6 +500,8 @@ bool ParseCmdLine(int argc, char **argv) {
 int main(int argc, char** argv)
 {
 	CollectTestEntries();
+
+	srand(time(0));
 
 	if (ParseCmdLine(argc, argv))
 		return 0;
